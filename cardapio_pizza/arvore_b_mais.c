@@ -83,19 +83,23 @@ int insere(int cod, char *nome, char *categoria, float preco, char *nome_arquivo
     }
     else {
 
+        //SETA O PONTEIRO PARA O ENDEREÇO RETORNADO PELA BUSCA
         fseek(arq_dados, var_busca, SEEK_SET);
 
+        //CRIA A PIZZA
         TPizza * p = pizza(cod, nome, categoria, preco);
 
+        //LÊ O NÓ FOLHA DO ARQUIVO
         TNoFolha * noFolha = le_no_folha(d, arq_dados);
 
+        //CASO AINDA HAJA ESPAÇO NA FOLHA PARA ADICIONAR
         if (noFolha->m < 2 * d) {
 
             //INSERE NO FINAL DO VETOR DE PIZZAS E INCREMENTA M EM UMA UNIDADE
             noFolha->pizzas[noFolha->m] = p;
             noFolha->m++;
 
-            //REORDENA O VETOR DE PIZZAS
+            //REORDENA O VETOR DE PIZZAS POR CÓDIGO DA PIZZA
             for (int i = 1; i < noFolha->m; i++) {
 
                 for (int j = 0; j < noFolha->m - i; j++) {
@@ -107,10 +111,14 @@ int insere(int cod, char *nome, char *categoria, float preco, char *nome_arquivo
                     }
                 }
             }
+
+            //SETA O PONTEIRO PARA O QUE FOI RETORNADO DA BUSCA
             fseek(arq_dados, var_busca, SEEK_SET);
 
+            //SALVA O ARQUIVO DE DADOS E ENTÃO O FECHA
             salva_no_folha(d, noFolha, arq_dados);
             fclose(arq_dados);
+
             return var_busca;
         }
     }
@@ -130,31 +138,40 @@ int exclui(int cod, char *nome_arquivo_metadados, char *nome_arquivo_indice, cha
 
 void carrega_dados(int d, char *nome_arquivo_entrada, char *nome_arquivo_metadados, char *nome_arquivo_indice, char *nome_arquivo_dados){
 
+    //ABRE OS ARQUIVOS NECESSARIOS
     FILE * arq_entrada = fopen(nome_arquivo_entrada, "rb");
     FILE * arq_indice = fopen(nome_arquivo_indice, "wb");
     FILE * arq_dados = fopen(nome_arquivo_dados, "wb");
 
-    TMetadados *tabMetadados = metadados(d, 0, 1, 0, 1 * tamanho_no_folha(d));
-    salva_arq_metadados(nome_arquivo_metadados, tabMetadados);
+    //CRIA UM ARQUIVO DE METADADOS E SALVA-O EM ARQUIVO
+    TMetadados * Metadados = metadados(d, 0, 1, 0, 1 * tamanho_no_folha(d));
+    salva_arq_metadados(nome_arquivo_metadados, Metadados);
 
+    //CRIA UM NÓ INTERNO E SALVA-O EM ARQUIVO
     TNoInterno *noInterno = no_interno_vazio(d);
     salva_no_interno(d, noInterno, arq_indice);
 
+    //CRIA UM NO FOLHA E SALVA-O EM ARQUIVO
     TNoFolha *noFolha = no_folha_vazio(d);
     salva_no_folha(d, noFolha, arq_dados);
 
+    //FECHA OS ARQUIVOS QUE NÃO SERÃO MAIS UTILIZADOS
     fclose(arq_dados);
     fclose(arq_indice);
 
-    TPizza * p;
-    p = le_pizza(arq_entrada);
+    //LÊ PIZZA DO ARQUIVO DE ENTRADA
+    TPizza * p = le_pizza(arq_entrada);
 
+    //FAZ ISSO ENQUANTO PIZZA FOR DIFERENTE DE NULL
     while(p != NULL){
+        //CRIA UMA PIZZA COM O QUE FOI LIDO DO ARQUIVO DE ENTRADA
         p = pizza(p->cod, p->nome, p->categoria, p->preco);
+        //INSERE A PIZZA
         insere(p->cod, p->nome, p->categoria, p->preco, nome_arquivo_metadados, nome_arquivo_indice, nome_arquivo_dados, d);
-        free(p);
+        //PIZZA RECEBE PROXIMA PIZZA DO ARQUIVO DE ENTRADA
         p = le_pizza(arq_entrada);
     }
 
+    //FECHA ARQUIVO DE ENTRADA
     fclose(arq_entrada);
 }
