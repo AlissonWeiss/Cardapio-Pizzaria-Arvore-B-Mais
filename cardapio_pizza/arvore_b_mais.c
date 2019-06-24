@@ -59,6 +59,7 @@ int busca(int cod, char *nome_arquivo_metadados, char *nome_arquivo_indice, char
                         else{
                             fseek(arq_indice, noInterno->p[noInterno->m], SEEK_SET);
                             noInterno = le_no_interno(d, arq_indice);
+                            break;
                         }
                     }
                 }
@@ -66,15 +67,58 @@ int busca(int cod, char *nome_arquivo_metadados, char *nome_arquivo_indice, char
             }
         }
     }
-
-    //RETORNA COM ERRO
-    return NULL;
 }
 
 int insere(int cod, char *nome, char *categoria, float preco, char *nome_arquivo_metadados, char *nome_arquivo_indice, char *nome_arquivo_dados, int d)
 {
-	//TODO: Inserir aqui o codigo do algoritmo de insercao
-    return INT_MAX;
+    FILE * arq_indice = fopen(nome_arquivo_indice, "rb+");
+    FILE * arq_dados = fopen(nome_arquivo_dados, "rb+");
+    FILE * arq_metadados = fopen(nome_arquivo_metadados, "rb+");
+
+    int var_busca = busca(cod, nome_arquivo_metadados, nome_arquivo_indice, nome_arquivo_dados, d);
+
+    //CHAVE JÁ ESTÁ NA ARVORE
+    if (var_busca == cod){
+        return -1;
+    }
+    else {
+
+        fseek(arq_dados, var_busca, SEEK_SET);
+
+        TPizza * p = pizza(cod, nome, categoria, preco);
+
+        TNoFolha * noFolha = le_no_folha(d, arq_dados);
+
+        if (noFolha->m < 2 * d) {
+
+            //INSERE NO FINAL DO VETOR DE PIZZAS E INCREMENTA M EM UMA UNIDADE
+            noFolha->pizzas[noFolha->m] = p;
+            noFolha->m++;
+
+            //REORDENA O VETOR DE PIZZAS
+            for (int i = 1; i < noFolha->m; i++) {
+
+                for (int j = 0; j < noFolha->m - i; j++) {
+                    if (noFolha->pizzas[j]->cod > noFolha->pizzas[j + 1]->cod) {
+                        TPizza *aux = noFolha->pizzas[j];
+                        noFolha->pizzas[j] = noFolha->pizzas[j + 1];
+                        noFolha->pizzas[j + 1] = aux;
+
+                    }
+                }
+            }
+            fseek(arq_dados, var_busca, SEEK_SET);
+
+            salva_no_folha(d, noFolha, arq_dados);
+            fclose(arq_dados);
+            return var_busca;
+        }
+    }
+
+
+    //RETORNO COM ERRO
+    return -1;
+
 }
 
 int exclui(int cod, char *nome_arquivo_metadados, char *nome_arquivo_indice, char *nome_arquivo_dados, int d)
@@ -97,7 +141,7 @@ void carrega_dados(int d, char *nome_arquivo_entrada, char *nome_arquivo_metadad
     salva_no_interno(d, noInterno, arq_indice);
 
     TNoFolha *noFolha = no_folha_vazio(d);
-    salva_no_folha(d, noFolha, arq_entrada);
+    salva_no_folha(d, noFolha, arq_dados);
 
     fclose(arq_dados);
     fclose(arq_indice);
