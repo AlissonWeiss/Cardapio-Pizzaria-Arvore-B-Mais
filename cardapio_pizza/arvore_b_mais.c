@@ -131,7 +131,57 @@ int insere(int cod, char *nome, char *categoria, float preco, char *nome_arquivo
 
 int exclui(int cod, char *nome_arquivo_metadados, char *nome_arquivo_indice, char *nome_arquivo_dados, int d)
 {
-	//TODO: Inserir aqui o codigo do algoritmo de remocao
+	// ABRE OS ARQUIVOS NECESSARIOS
+	FILE * arq_metadados = fopen(nome_arquivo_metadados, "rb+");
+	FILE * arq_indice = fopen(nome_arquivo_indice, "rb+");
+	FILE * arq_dados = fopen(nome_arquivo_dados, "rb+");
+
+	int var_busca = busca(cod, nome_arquivo_metadados, nome_arquivo_indice, nome_arquivo_dados, d);
+
+	// CASO A BUSCA RETORNE -1, A PIZZA NÃO FOI ENCONTRADA E POR ISSO NÃO PODE FAZER A REMOÇÃO
+	if (var_busca == -1)
+	    return -1;
+	else {
+
+	    // SETA O PONTEIRO PARA O ENDEREÇO RETORNADO NA BUSCA
+	    fseek(arq_dados, var_busca, SEEK_SET);
+
+	    // LÊ O NÓ FOLHA
+	    TNoFolha* noFolha = le_no_folha(d, arq_dados);
+
+	    // CASO A REMOÇÃO VÁ MANTER O NÓ FOLHA COM TAMANHO SUFICIENTE
+	    if (noFolha->m > d) {
+
+	        // REMOVE A PIZZA DA FOLHA
+	        for(int i = 0; i < noFolha->m; i++) {
+
+	            if (cod == noFolha->pizzas[i]->cod) {
+                    for (int j = i; j < noFolha->m - 1; j++) {
+                        noFolha->pizzas[j] = noFolha->pizzas[j + 1];
+                    }
+
+                    noFolha->pizzas[noFolha->m - 1] = NULL;
+                    free(noFolha->pizzas[noFolha->m - 1]);
+
+                    noFolha->m--;
+                    break;
+                }
+	        }
+
+	        // SALVA O NÓ FOLHA NO ARQUIVO DE DADOS E FECHA OS ARQUIVOS
+	        fseek(arq_dados, var_busca, SEEK_SET);
+	        salva_no_folha(d, noFolha, arq_dados);
+	        fclose(arq_metadados);
+	        fclose(arq_indice);
+	        fclose(arq_dados);
+
+	        // RETORNA A PIZZA REMOVIDA
+	        return var_busca;
+
+	    }
+
+	}
+
     return INT_MAX;
 }
 
