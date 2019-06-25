@@ -75,54 +75,57 @@ int insere(int cod, char *nome, char *categoria, float preco, char *nome_arquivo
     FILE * arq_dados = fopen(nome_arquivo_dados, "rb+");
     FILE * arq_metadados = fopen(nome_arquivo_metadados, "rb+");
 
+    //FAZ A BUSCA E RETORNA PONTEIRO PRO NÓ QUE O CÓDIGO ESTÁ PRESENTE
     int var_busca = busca(cod, nome_arquivo_metadados, nome_arquivo_indice, nome_arquivo_dados, d);
 
-    //CHAVE JÁ ESTÁ NA ARVORE
-    if (var_busca == cod){
-        return -1;
+    //COLOCA O CURSOS NO DEVIDO LOCAL
+    fseek(arq_dados, var_busca, SEEK_SET);
+
+    //LÊ O NÓ FOLHA
+    TNoFolha * noFolha = le_no_folha(d, arq_dados);
+
+
+    for (int i = 0; i < noFolha->m; i++){
+        //VERIFICA SE A PIZZA JÁ ESTÁ NO NÓ
+        if (cod == noFolha->pizzas[i]->cod)
+            return -1;
     }
-    else {
 
-        //SETA O PONTEIRO PARA O ENDEREÇO RETORNADO PELA BUSCA
-        fseek(arq_dados, var_busca, SEEK_SET);
+    //CRIA A PIZZA A SER INSERIDA POSTERIORMENTE
+    TPizza * p = pizza(cod, nome, categoria, preco);
 
-        //CRIA A PIZZA
-        TPizza * p = pizza(cod, nome, categoria, preco);
+    //VERIFICA SE POSSUI ESPAÇO NO NÓ PARA INSERÇÃO
+    if (noFolha->m < (2 * d)){
 
-        //LÊ O NÓ FOLHA DO ARQUIVO
-        TNoFolha * noFolha = le_no_folha(d, arq_dados);
+        //INSERE PIZZA NO FINAL DO NÓ E INCREMENTA M EM UMA UNIDADE
+        noFolha->pizzas[noFolha->m] = p;
+        noFolha->m++;
 
-        //CASO AINDA HAJA ESPAÇO NA FOLHA PARA ADICIONAR
-        if (noFolha->m < 2 * d) {
+        //REORDENA O VETOR DE PIZZAS POR CÓDIGO DA PIZZA
+        for (int i = 1; i < noFolha->m; i++) {
 
-            //INSERE NO FINAL DO VETOR DE PIZZAS E INCREMENTA M EM UMA UNIDADE
-            noFolha->pizzas[noFolha->m] = p;
-            noFolha->m++;
+            for (int j = 0; j < noFolha->m - i; j++) {
+                if (noFolha->pizzas[j]->cod > noFolha->pizzas[j + 1]->cod) {
+                    TPizza *aux = noFolha->pizzas[j];
+                    noFolha->pizzas[j] = noFolha->pizzas[j + 1];
+                    noFolha->pizzas[j + 1] = aux;
 
-            //REORDENA O VETOR DE PIZZAS POR CÓDIGO DA PIZZA
-            for (int i = 1; i < noFolha->m; i++) {
-
-                for (int j = 0; j < noFolha->m - i; j++) {
-                    if (noFolha->pizzas[j]->cod > noFolha->pizzas[j + 1]->cod) {
-                        TPizza *aux = noFolha->pizzas[j];
-                        noFolha->pizzas[j] = noFolha->pizzas[j + 1];
-                        noFolha->pizzas[j + 1] = aux;
-
-                    }
                 }
             }
-
-            //SETA O PONTEIRO PARA O QUE FOI RETORNADO DA BUSCA
-            fseek(arq_dados, var_busca, SEEK_SET);
-
-            //SALVA O ARQUIVO DE DADOS E ENTÃO O FECHA
-            salva_no_folha(d, noFolha, arq_dados);
-            fclose(arq_dados);
-
-            return var_busca;
         }
-    }
 
+        //SETA O PONTEIRO PARA O QUE FOI RETORNADO DA BUSCA
+        fseek(arq_dados, var_busca, SEEK_SET);
+
+        //SALVA O ARQUIVO DE DADOS E FECHA ARQUIVOS
+        salva_no_folha(d, noFolha, arq_dados);
+        fclose(arq_dados);
+        fclose(arq_indice);
+        fclose(arq_metadados);
+
+        return var_busca;
+
+    }
 
     //RETORNO COM ERRO
     return -1;
@@ -216,8 +219,6 @@ int exclui(int cod, char *nome_arquivo_metadados, char *nome_arquivo_indice, cha
 	            noFolhaProx->pizzas[noFolhaProx->m - 1] = NULL;
 	            noFolhaProx->m--;
 
-                imprime_no_folha(d, noFolha);
-                imprime_no_folha(d, noFolhaProx);
 
 	            // LÊ O NÓ INTERNO QUE APONTA PARA O PRÓXIMO NÓ E ALTERA O VALOR DA CHAVE
 	            fseek(arq_indice, noFolhaProx->pont_pai, SEEK_SET);
