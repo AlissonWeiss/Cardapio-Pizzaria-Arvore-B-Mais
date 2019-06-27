@@ -933,7 +933,6 @@ BEGIN_TESTS();
         ASSERT_EQUAL_CMP(D, tabDados, tabDadosSaida, cmp_nos_folhas);
         libera_nos_folhas(D, tabDados);
         libera_nos_folhas(D, tabDadosSaida);
-        printf("\n-- TESTE 4 COMPLETO --\n");
     }
     //TESTE 17
     TEST("Exclusao 5 em arvore de altura H = 3, eh necessario concatenação, causa diminuicao da altura da arvore");
