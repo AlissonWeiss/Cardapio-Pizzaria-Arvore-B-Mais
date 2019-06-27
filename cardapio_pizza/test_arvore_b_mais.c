@@ -357,6 +357,7 @@ void monta_arvore_h3() {
 
 BEGIN_TESTS();
 
+    //TESTE 1
     TEST("Busca 1 -- chave procurada esta na raiz. Raiz eh folha");
     if (!skip) {
         int pont = INT_MAX;
@@ -365,7 +366,7 @@ BEGIN_TESTS();
         pont = busca(13, NOME_ARQUIVO_METADADOS, NOME_ARQUIVO_INDICE, NOME_ARQUIVO_DADOS, 2);
         ASSERT_EQUAL(0, pont);
     }
-
+    //TESTE 2
     TEST("Busca 2 -- chave procurada nao esta na arvore. Raiz eh folha");
     if (!skip) {
         int pont = INT_MAX;
@@ -374,7 +375,7 @@ BEGIN_TESTS();
         pont = busca(6, NOME_ARQUIVO_METADADOS, NOME_ARQUIVO_INDICE, NOME_ARQUIVO_DADOS, 2);
         ASSERT_EQUAL(0, pont);
     }
-
+    //TESTE 3
     TEST("Busca 3 -- chave esta na arvore");
     if (!skip) {
         int pont = INT_MAX;
@@ -383,7 +384,7 @@ BEGIN_TESTS();
         pont = busca(20, NOME_ARQUIVO_METADADOS, NOME_ARQUIVO_INDICE, NOME_ARQUIVO_DADOS, 2);
         ASSERT_EQUAL(1 * tamanho_no_folha(D), pont);
     }
-
+    //TESTE 4
     TEST("Busca 4 -- chave nao esta na arvore");
     if (!skip) {
         int pont = INT_MAX;
@@ -392,7 +393,7 @@ BEGIN_TESTS();
         pont = busca(16, NOME_ARQUIVO_METADADOS, NOME_ARQUIVO_INDICE, NOME_ARQUIVO_DADOS, 2);
         ASSERT_EQUAL(1 * tamanho_no_folha(D), pont);
     }
-
+    //TESTE 5
     TEST("Busca 5 -- chave esta na arvore");
     if (!skip) {
         int pont = INT_MAX;
@@ -401,7 +402,7 @@ BEGIN_TESTS();
         pont = busca(37, NOME_ARQUIVO_METADADOS, NOME_ARQUIVO_INDICE, NOME_ARQUIVO_DADOS, 2);
         ASSERT_EQUAL(3 * tamanho_no_folha(D), pont);
     }
-
+    //TESTE 6
     TEST("Busca 6 -- chave nao esta na arvore");
     if (!skip) {
         int pont = INT_MAX;
@@ -411,7 +412,7 @@ BEGIN_TESTS();
         ASSERT_EQUAL(2 * tamanho_no_folha(D), pont);
     }
 
-
+    //TESTE 7
     TEST("Insercao 1 em arvore de altura H = 1, sem particionamento");
     if (!skip) {
         int pont = INT_MAX;
@@ -438,7 +439,7 @@ BEGIN_TESTS();
         libera_nos_folhas(D, tabDados);
         libera_nos_folhas(D, tabDadosSaida);
     }
-
+    //TESTE 8
     TEST("Insercao 2 em arvore de altura H = 2, sem particionamento");
     if (!skip) {
         int pont = INT_MAX;
@@ -490,7 +491,7 @@ BEGIN_TESTS();
         libera_nos_folhas(D, tabDados);
         libera_nos_folhas(D, tabDadosSaida);
     }
-
+    //TESTE 9
     TEST("Insercao 3 em arvore de altura H = 2. Exige particionamento de uma pagina folha");
     if (!skip) {
         int pont = INT_MAX;
@@ -549,7 +550,7 @@ BEGIN_TESTS();
         libera_nos_folhas(D, tabDados);
         libera_nos_folhas(D, tabDadosSaida);
     }
-
+    //TESTE 10
     TEST("Insercao 4 em arvore de altura H = 2, chave de registro ja existe -- nao inserir");
     if (!skip) {
         int pont = INT_MAX;
@@ -601,7 +602,7 @@ BEGIN_TESTS();
         libera_nos_folhas(D, tabDados);
         libera_nos_folhas(D, tabDadosSaida);
     }
-
+    //TESTE 11
     TEST("Insercao 5 em arvore de altura H = 1 cheia, que causa aumento na altura da arvore");
     if (!skip) {
         int pont = INT_MAX;
@@ -646,7 +647,7 @@ BEGIN_TESTS();
         libera_nos_folhas(D, tabDados);
         libera_nos_folhas(D, tabDadosSaida);
     }
-
+    //TESTE 12
     TEST("Insercao 6 em arvore de altura H = 2 completa. Folha esta cheia, raiz tambem");
     if (!skip) {
         int pont = INT_MAX;
@@ -727,7 +728,7 @@ BEGIN_TESTS();
         libera_nos_folhas(D, tabDados);
         libera_nos_folhas(D, tabDadosSaida);
     }
-
+    //TESTE 13
     TEST("Exclusao 1 em arvore de altura H = 2 cheia, nao eh necessario concatenacao");
     if (!skip) {
         int pont = INT_MAX;
@@ -778,7 +779,7 @@ BEGIN_TESTS();
         libera_nos_folhas(D, tabDados);
         libera_nos_folhas(D, tabDadosSaida);
     }
-
+    //TESTE 14
     TEST("Exclusao 2 em arvore de altura H = 2, eh necessario redistribuição");
     if (!skip) {
         int pont = INT_MAX;
@@ -829,7 +830,7 @@ BEGIN_TESTS();
         libera_nos_folhas(D, tabDados);
         libera_nos_folhas(D, tabDadosSaida);
     }
-
+    //TESTE 15
     TEST("Exclusao 3 em arvore de altura H = 2, eh necessario redistribuicao");
     if (!skip) {
         int pont = INT_MAX;
@@ -881,7 +882,7 @@ BEGIN_TESTS();
         libera_nos_folhas(D, tabDados);
         libera_nos_folhas(D, tabDadosSaida);
     }
-
+    //TESTE 16
     TEST("Exclusao 4 em arvore de altura H = 2, eh necessario concatenação");
     if (!skip) {
         int pont = INT_MAX;
@@ -934,7 +935,7 @@ BEGIN_TESTS();
         libera_nos_folhas(D, tabDadosSaida);
         printf("\n-- TESTE 4 COMPLETO --\n");
     }
-
+    //TESTE 17
     TEST("Exclusao 5 em arvore de altura H = 3, eh necessario concatenação, causa diminuicao da altura da arvore");
     if (!skip) {
         int pont = INT_MAX;
@@ -1024,7 +1025,7 @@ BEGIN_TESTS();
         libera_nos_folhas(D, tabDados);
         libera_nos_folhas(D, tabDadosSaida);
     }
-
+    //TESTE 18
     TEST("Carga de Dados Inicial 1, raiz eh folha");
     if (!skip) {
         gera_arquivo_carga_inicial_1();
@@ -1049,7 +1050,7 @@ BEGIN_TESTS();
         libera_nos_folhas(D, tabDados);
         libera_nos_folhas(D, tabDadosSaida);
     }
-
+    //TESTE 19
     TEST("Carga de Dados Inicial 2, folha e 2 nohs");
     if (!skip) {
         gera_arquivo_carga_inicial_2();
@@ -1096,7 +1097,7 @@ BEGIN_TESTS();
         libera_nos_folhas(D, tabDados);
         libera_nos_folhas(D, tabDadosSaida);
     }
-
+    //TESTE 20
     TEST("Carga de Dados Inicial 3, 50 registros, 11 nohs internos, 24 folhas");
     if (!skip) {
         gera_arquivo_carga_inicial_3();
