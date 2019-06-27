@@ -260,7 +260,52 @@ int exclui(int cod, char *nome_arquivo_metadados, char *nome_arquivo_indice, cha
 	        // CASO SEJA NECESSÁRIA A CONCATENAÇÃO
 	        else if (noFolha->m + noFolhaProx->m < 2*d) {
 	            printf("\n-- Concatenar --\n");
-	        }
+
+	            fseek(arq_indice, noFolha->pont_pai, SEEK_SET);
+	            TNoInterno * noInterno = le_no_interno(d, arq_indice);
+//	            imprime_no_interno(d, noInterno);
+
+//                printf("\nNo folha atual:");
+//                imprime_no_folha(d, noFolha);
+//                printf("\nNo folha prox:");
+//                imprime_no_folha(d, noFolhaProx);
+
+                // MOVE AS PIZZAS DO PRÓXIMO NÓ PARA O NÓ NO QUAL OCORREU A REMOÇÃO
+                for(int i = 0; noFolhaProx->m > 0; i++) {
+                    noFolha->pizzas[noFolha->m] = noFolhaProx->pizzas[i];
+                    noFolha->m++;
+                    noFolhaProx->m--;
+                }
+
+                // VARIÁVEL PARA ARMAZENAR QUAL DOS PONTEIROS DO NÓ INTERNO À SER ALTERADA
+                int controle = 0;
+                TNoFolha* noAux;
+                for (int i = 0; i < noInterno->m; i++){
+                    if (noInterno->p[i] == noFolha->pont_prox){
+                        break;
+                    }
+                    controle++;
+                }
+
+                // ATUALIZA O NÓ INTERNO
+                for(int i = 0; i < noInterno->m - 1; i++) {
+                    if (i >= controle) {
+                        noInterno->chaves[i] = noInterno->chaves[i+1];
+                        noInterno->p[i] = noInterno->p[i+1];
+                    }
+                }
+                noInterno->chaves[noInterno->m] = -1;
+                noInterno->p[noInterno->m] = -1;
+
+                printf("\nNo pai:");
+                imprime_no_interno(d, noInterno);
+                printf("\nNo folha atual:");
+                imprime_no_folha(d, noFolha);
+                printf("\nNo folha prox:");
+                imprime_no_folha(d, noFolhaProx);
+
+
+            }
 
 	    }
 
