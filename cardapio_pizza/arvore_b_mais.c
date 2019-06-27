@@ -263,12 +263,16 @@ int exclui(int cod, char *nome_arquivo_metadados, char *nome_arquivo_indice, cha
 
 	            fseek(arq_indice, noFolha->pont_pai, SEEK_SET);
 	            TNoInterno * noInterno = le_no_interno(d, arq_indice);
-//	            imprime_no_interno(d, noInterno);
+	            TMetadados* meta = le_arq_metadados(nome_arquivo_metadados);
 
-//                printf("\nNo folha atual:");
-//                imprime_no_folha(d, noFolha);
-//                printf("\nNo folha prox:");
-//                imprime_no_folha(d, noFolhaProx);
+	            printf("\nMetadados anterior:");
+	            imprime_metadados(meta);
+	            printf("\nNo pai anterior:");
+                imprime_no_interno(d, noInterno);
+                printf("\nNo folha atual ANT:");
+                imprime_no_folha(d, noFolha);
+                printf("\nNo folha prox ANT:");
+                imprime_no_folha(d, noFolhaProx);
 
                 // MOVE AS PIZZAS DO PRÓXIMO NÓ PARA O NÓ NO QUAL OCORREU A REMOÇÃO
                 for(int i = 0; noFolhaProx->m > 0; i++) {
@@ -279,7 +283,6 @@ int exclui(int cod, char *nome_arquivo_metadados, char *nome_arquivo_indice, cha
 
                 // VARIÁVEL PARA ARMAZENAR QUAL DOS PONTEIROS DO NÓ INTERNO À SER ALTERADA
                 int controle = 0;
-                TNoFolha* noAux;
                 for (int i = 0; i < noInterno->m; i++){
                     if (noInterno->p[i] == noFolha->pont_prox){
                         break;
@@ -288,22 +291,41 @@ int exclui(int cod, char *nome_arquivo_metadados, char *nome_arquivo_indice, cha
                 }
 
                 // ATUALIZA O NÓ INTERNO
-                for(int i = 0; i < noInterno->m - 1; i++) {
+                for(int i = 0; i < 2*d - 1; i++) {
                     if (i >= controle) {
-                        noInterno->chaves[i] = noInterno->chaves[i+1];
+                        noInterno->chaves[i-1] = noInterno->chaves[i];
                         noInterno->p[i] = noInterno->p[i+1];
                     }
                 }
                 noInterno->chaves[noInterno->m] = -1;
                 noInterno->p[noInterno->m] = -1;
 
-//                printf("\nNo pai:");
-//                imprime_no_interno(d, noInterno);
-//                printf("\nNo folha atual:");
-//                imprime_no_folha(d, noFolha);
-//                printf("\nNo folha prox:");
-//                imprime_no_folha(d, noFolhaProx);
+                // ATUALIZA O ARQUIVO DE METADADOS
+//                TMetadados* meta = le_arq_metadados(nome_arquivo_metadados);
+                meta->pont_prox_no_folha_livre = noFolha->pont_prox;
+                salva_arq_metadados(nome_arquivo_metadados, meta);
 
+                printf("\nMetadados:");
+                imprime_metadados(meta);
+                printf("\nNo pai:");
+                imprime_no_interno(d, noInterno);
+                printf("\nNo folha atual:");
+                imprime_no_folha(d, noFolha);
+                printf("\nNo folha prox:");
+                imprime_no_folha(d, noFolhaProx);
+
+                // ATUALIZA O PONTEIRO DO NÓ FOLHA E LIMPA A PRÓX FOLHA
+                noFolha->pont_prox = noFolhaProx->pont_prox;
+                libera_no_folha(d, noFolhaProx);
+
+                // SALVA ALTERAÇÕES NO DISCO
+                fseek(arq_dados, var_busca, SEEK_SET);
+                salva_no_folha(d, noFolha, arq_dados);
+
+                fseek(arq_indice, noFolha->pont_pai, SEEK_SET);
+                salva_no_interno(d, noInterno, arq_indice);
+
+                return var_busca;
 
             }
 
