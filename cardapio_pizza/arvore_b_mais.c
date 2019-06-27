@@ -175,6 +175,9 @@ int exclui(int cod, char *nome_arquivo_metadados, char *nome_arquivo_indice, cha
 	        fclose(arq_indice);
 	        fclose(arq_dados);
 
+	        // LIMPA O NÓ AUXILIAR
+	        libera_no_folha(d, noFolha);
+
 	        // RETORNA A PIZZA REMOVIDA
 	        return var_busca;
 
@@ -228,7 +231,6 @@ int exclui(int cod, char *nome_arquivo_metadados, char *nome_arquivo_indice, cha
 
 	            // VARIÁVEL PARA ARMAZENAR QUAL DOS PONTEIROS DO NÓ INTERNO À SER ALTERADA
 	            int controle = 0;
-                TNoFolha* noAux;
 	            for (int i = 0; i < noInterno->m; i++){
 	                if (noInterno->p[i] == noFolha->pont_prox){
 	                    break;
@@ -254,6 +256,11 @@ int exclui(int cod, char *nome_arquivo_metadados, char *nome_arquivo_indice, cha
 	            fclose(arq_indice);
 	            fclose(arq_dados);
 
+	            // LIMPA OS NÓS AUXILIARES
+	            libera_no_folha(d, noFolha);
+	            libera_no_folha(d, noFolhaProx);
+	            libera_no_interno(noInterno);
+
 	            return var_busca;
 	        }
 
@@ -263,16 +270,6 @@ int exclui(int cod, char *nome_arquivo_metadados, char *nome_arquivo_indice, cha
 
 	            fseek(arq_indice, noFolha->pont_pai, SEEK_SET);
 	            TNoInterno * noInterno = le_no_interno(d, arq_indice);
-	            TMetadados* meta = le_arq_metadados(nome_arquivo_metadados);
-
-	            printf("\nMetadados anterior:");
-	            imprime_metadados(meta);
-	            printf("\nNo pai anterior:");
-                imprime_no_interno(d, noInterno);
-                printf("\nNo folha atual ANT:");
-                imprime_no_folha(d, noFolha);
-                printf("\nNo folha prox ANT:");
-                imprime_no_folha(d, noFolhaProx);
 
                 // MOVE AS PIZZAS DO PRÓXIMO NÓ PARA O NÓ NO QUAL OCORREU A REMOÇÃO
                 for(int i = 0; noFolhaProx->m > 0; i++) {
@@ -299,20 +296,7 @@ int exclui(int cod, char *nome_arquivo_metadados, char *nome_arquivo_indice, cha
                 }
                 noInterno->chaves[noInterno->m] = -1;
                 noInterno->p[noInterno->m] = -1;
-
-                // ATUALIZA O ARQUIVO DE METADADOS
-//                TMetadados* meta = le_arq_metadados(nome_arquivo_metadados);
-                meta->pont_prox_no_folha_livre = noFolha->pont_prox;
-                salva_arq_metadados(nome_arquivo_metadados, meta);
-
-                printf("\nMetadados:");
-                imprime_metadados(meta);
-                printf("\nNo pai:");
-                imprime_no_interno(d, noInterno);
-                printf("\nNo folha atual:");
-                imprime_no_folha(d, noFolha);
-                printf("\nNo folha prox:");
-                imprime_no_folha(d, noFolhaProx);
+                noInterno->m--;
 
                 // ATUALIZA O PONTEIRO DO NÓ FOLHA E LIMPA A PRÓX FOLHA
                 noFolha->pont_prox = noFolhaProx->pont_prox;
@@ -325,6 +309,23 @@ int exclui(int cod, char *nome_arquivo_metadados, char *nome_arquivo_indice, cha
                 fseek(arq_indice, noFolha->pont_pai, SEEK_SET);
                 salva_no_interno(d, noInterno, arq_indice);
 
+                // TESTES
+//                TMetadados* meta = le_arq_metadados(nome_arquivo_metadados);
+//                printf("\nMetadados:  ");
+//                imprime_metadados(meta);
+//                fseek(arq_indice, meta->pont_raiz, SEEK_SET);
+//                TNoInterno* raiz = le_no_interno(d, arq_indice);
+//                printf("\nRaiz:  ");
+//                imprime_no_interno(d, raiz);
+//                TNoFolha* f1, *f2;
+//                fseek(arq_dados, raiz->p[0], SEEK_SET);
+//                f1 = le_no_folha(d, arq_dados);
+//                fseek(arq_dados, raiz->p[1], SEEK_SET);
+//                f2 = le_no_folha(d, arq_dados);
+//                printf("\nFolha 0:\n");
+//                imprime_no_folha(d, f1);
+//                printf("\nFolha 1:\n");
+//                imprime_no_folha(d, f2);
                 return var_busca;
 
             }
