@@ -133,44 +133,47 @@ int insere(int cod, char *nome, char *categoria, float preco, char *nome_arquivo
         //CASO NÃO HAJA ESPAÇO EM NÓ E NECESSITE PARTICIONAMENTO
     else {
 
-        //VERIFICA SE A RAIZ É FOLHA
-        if (metadados->raiz_folha){
+        //CRIA NOVO NÓ FOLHA E ATRIBUI ALGUNS ITENS
+        TNoFolha *novoNo = no_folha_vazio(d);
+        novoNo->pont_prox = noFolha->pont_prox;
+        novoNo->pont_pai = noFolha->pont_pai;
 
+        //PERCORRE A NO FOLHA E VERIFICA ONDE DEVE SER INSERIDO A NOVA PIZZA
+        int controle = 0;
+        for (int i = 0; i < noFolha->m; i++) {
 
+            if (cod < noFolha->pizzas[i]->cod)
+                break;
 
+            controle++;
         }
-        else {
 
-            //POSICIONA O CURSOR NO PAI
-            fseek(arq_indice, noFolha->pont_pai, SEEK_SET);
-
-            //LÊ O NÓ INTERNO
-            TNoInterno *noInterno = le_no_interno(d, arq_indice);
-
-            //CRIA NOVO NÓ FOLHA E ATRIBUI ALGUNS ITENS
-            TNoFolha *novoNo = no_folha_vazio(d);
-            novoNo->pont_prox = noFolha->pont_prox;
-            novoNo->pont_pai = noFolha->pont_pai;
-
-            noFolha->pont_prox = metadados->pont_prox_no_folha_livre;
-
-
-            //PERCORRE A NO FOLHA E VERIFICA ONDE DEVE SER INSERIDO A NOVA PIZZA
-            int controle = 0;
-            for (int i = 0; i < noFolha->m; i++) {
-
-                if (cod < noFolha->pizzas[i]->cod)
-                    break;
-
-                controle++;
+        //POSIÇÕES MAIORES QUE D VÃO PARA O NOVO NÓ
+        int trocou_folha = 0;
+        if (controle >= d) {
+            int aux_index = 0;
+            int aux_tam = noFolha->m;
+            for (int i = d; i < aux_tam; i++) {
+                novoNo->pizzas[aux_index] = pizza(noFolha->pizzas[i]->cod, noFolha->pizzas[i]->nome,
+                                                  noFolha->pizzas[i]->categoria, noFolha->pizzas[i]->preco);
+                noFolha->pizzas[i] = NULL;
+                noFolha->m--;
+                novoNo->m++;
+                aux_index++;
             }
+            //ADICIONA NOVA PIZZA NO FINAL DO NOVO NÓ
+            novoNo->pizzas[novoNo->m] = p;
+            novoNo->m++;
+        }
+        //INSERE NO NÓ FOLHA E MOVE OUTROS PARA NOVO NÓ
+        else {
+            int aux_index = 0;
+            int aux_tam = noFolha->m;
+            for (int i = 0; i < aux_tam; i++) {
 
-            //POSIÇÕES MAIORES QUE D VÃO PARA O NOVO NÓ
-            int trocou_folha = 0;
-            if (controle >= d) {
-                int aux_index = 0;
-                int aux_tam = noFolha->m;
-                for (int i = d; i < aux_tam; i++) {
+                if (noFolha->pizzas[i]->cod == cod) trocou_folha = 1;
+
+                if (i >= d - 1) {
                     novoNo->pizzas[aux_index] = pizza(noFolha->pizzas[i]->cod, noFolha->pizzas[i]->nome,
                                                       noFolha->pizzas[i]->categoria, noFolha->pizzas[i]->preco);
                     noFolha->pizzas[i] = NULL;
@@ -178,60 +181,58 @@ int insere(int cod, char *nome, char *categoria, float preco, char *nome_arquivo
                     novoNo->m++;
                     aux_index++;
                 }
-                //ADICIONA NOVA PIZZA NO FINAL DO NOVO NÓ
-                novoNo->pizzas[novoNo->m] = p;
-                novoNo->m++;
             }
-                //INSERE NO NÓ FOLHA E MOVE OUTROS PARA NOVO NÓ
-            else {
-                int aux_index = 0;
-                int aux_tam = noFolha->m;
-                for (int i = 0; i < aux_tam; i++) {
+            noFolha->pizzas[noFolha->m] = p;
+            noFolha->m++;
 
-                    if (noFolha->pizzas[i]->cod == cod) trocou_folha = 1;
+        }
 
-                    if (i >= d - 1) {
-                        novoNo->pizzas[aux_index] = pizza(noFolha->pizzas[i]->cod, noFolha->pizzas[i]->nome,
-                                                          noFolha->pizzas[i]->categoria, noFolha->pizzas[i]->preco);
-                        noFolha->pizzas[i] = NULL;
-                        noFolha->m--;
-                        novoNo->m++;
-                        aux_index++;
-                    }
-                }
-                noFolha->pizzas[noFolha->m] = p;
-                noFolha->m++;
-
-            }
-
-            //ORDENA NO FOLHA
-            for (int i = 1; i < noFolha->m; i++) {
-                for (int j = 0; j < noFolha->m - i; j++) {
-                    if (noFolha->pizzas[j]->cod > noFolha->pizzas[j + 1]->cod) {
-                        TPizza *aux = noFolha->pizzas[j];
-                        noFolha->pizzas[j] = noFolha->pizzas[j + 1];
-                        noFolha->pizzas[j + 1] = aux;
-                    }
+        //ORDENA NO FOLHA
+        for (int i = 1; i < noFolha->m; i++) {
+            for (int j = 0; j < noFolha->m - i; j++) {
+                if (noFolha->pizzas[j]->cod > noFolha->pizzas[j + 1]->cod) {
+                    TPizza *aux = noFolha->pizzas[j];
+                    noFolha->pizzas[j] = noFolha->pizzas[j + 1];
+                    noFolha->pizzas[j + 1] = aux;
                 }
             }
+        }
 
-            //ORDENA NOVO NO
-            for (int i = 1; i < novoNo->m; i++) {
-                for (int j = 0; j < novoNo->m - i; j++) {
-                    if (novoNo->pizzas[j]->cod > novoNo->pizzas[j + 1]->cod) {
-                        TPizza *aux = novoNo->pizzas[j];
-                        novoNo->pizzas[j] = novoNo->pizzas[j + 1];
-                        novoNo->pizzas[j + 1] = aux;
-                    }
+        //ORDENA NOVO NO
+        for (int i = 1; i < novoNo->m; i++) {
+            for (int j = 0; j < novoNo->m - i; j++) {
+                if (novoNo->pizzas[j]->cod > novoNo->pizzas[j + 1]->cod) {
+                    TPizza *aux = novoNo->pizzas[j];
+                    novoNo->pizzas[j] = novoNo->pizzas[j + 1];
+                    novoNo->pizzas[j + 1] = aux;
                 }
             }
+        }
+
+        //POSICIONA O CURSOR NO PAI
+        fseek(arq_indice, noFolha->pont_pai, SEEK_SET);
+
+        //VERIFICA SE RAIZ É FOLHA
+        if (metadados->raiz_folha){
+            printf("RAIZ EH FOLHA!\n");
+            printf("CHAVE: %d\n", cod);
+        }
+        else {
+
+            //LÊ O NÓ INTERNO
+            TNoInterno *noInterno = le_no_interno(d, arq_indice);
+
+            //ATUALIZA O PONTEIRO DO NOVO NÓ
+            noFolha->pont_prox = metadados->pont_prox_no_folha_livre;
+
+            //ATUALIZA O PRÓXIMO PONTEIRO PRA NÓ FOLHA LIVRE
+            metadados->pont_prox_no_folha_livre = noFolha->pont_prox + tamanho_no_folha(d);
 
             //PEGA CHAVE E PONTEIRO PARA SUBIR PRO PAI
             int chave = novoNo->pizzas[0]->cod;
             int chave_pont = noFolha->pont_prox;
 
             //AINDA HÁ ESPAÇO PARA ADICIONAR CHAVES NO PAI
-
             if (noInterno->m < (2 * d)) {
 
                 //ADICIONA CHAVE NO FINAL DO NO INTERNO
@@ -303,8 +304,8 @@ int insere(int cod, char *nome, char *categoria, float preco, char *nome_arquivo
 //                }
 //            }
 //        }
-
         }
+
     }
 
     //RETORNO COM ERRO
