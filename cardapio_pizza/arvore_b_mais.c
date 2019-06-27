@@ -259,7 +259,7 @@ int exclui(int cod, char *nome_arquivo_metadados, char *nome_arquivo_indice, cha
 
 	        // CASO SEJA NECESSÁRIA A CONCATENAÇÃO
 	        else if (noFolha->m + noFolhaProx->m < 2*d) {
-	            printf("\n-- Concatenar --\n");
+//	            printf("\n-- Concatenação incompleta --\n");
 
 	            fseek(arq_indice, noFolha->pont_pai, SEEK_SET);
 	            TNoInterno * noInterno = le_no_interno(d, arq_indice);
@@ -297,12 +297,12 @@ int exclui(int cod, char *nome_arquivo_metadados, char *nome_arquivo_indice, cha
                 noInterno->chaves[noInterno->m] = -1;
                 noInterno->p[noInterno->m] = -1;
 
-                printf("\nNo pai:");
-                imprime_no_interno(d, noInterno);
-                printf("\nNo folha atual:");
-                imprime_no_folha(d, noFolha);
-                printf("\nNo folha prox:");
-                imprime_no_folha(d, noFolhaProx);
+//                printf("\nNo pai:");
+//                imprime_no_interno(d, noInterno);
+//                printf("\nNo folha atual:");
+//                imprime_no_folha(d, noFolha);
+//                printf("\nNo folha prox:");
+//                imprime_no_folha(d, noFolhaProx);
 
 
             }
