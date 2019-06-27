@@ -299,32 +299,35 @@ int exclui(int cod, char *nome_arquivo_metadados, char *nome_arquivo_indice, cha
 	        fseek(arq_dados, noFolha->pont_prox, SEEK_SET);
 	        TNoFolha* noFolhaProx = le_no_folha(d, arq_dados);
 
-	        // CASO SEJA POSSÍVEL FAZER A REDISTRIBUIÇÃO DOS NÓS FOLHAS
-	        if (noFolha->m + noFolhaProx->m < 2 * d) {
+	        // CASO SEJA POSSÍVEL FAZER A REDISTRIBUIÇÃO COM O NÓ FOLHA DA DIREITA
+	        if (noFolha->m + noFolhaProx->m >= (2 * d)) {
 
-	            // MOVE UMA PIZZA DO PRÓXIMO NÓ PARA O NÓ FOLHA NO QUAL FOI REALIZADA A REMOÇÃO
-	            noFolha->pizzas[noFolha->m] = noFolhaProx->pizzas[0];
-                noFolha->m++;
+                // PASSA AS D PRIMEIRAS PIZZAS DO PRÓXIMO NÓ FOLHA PARA O NÓ EM QUE OCORREU A REMOÇÃO
+	            for(int i = 0; noFolha->m < d; i++) {
+	                noFolha->pizzas[i + noFolha->m] = noFolhaProx->pizzas[i];
+	                noFolha->m++;
 
-	            // REORGANIZA O PRÓXIMO NÓ FOLHA (MOVE TODAS AS PIZZAS PRO ÍNDICE ANTERIOR QUE FOI DESOCUPADO)
-	            for(int i = 0; i < noFolhaProx->m - 1; i++) {
-	                noFolhaProx->pizzas[i] = noFolhaProx->pizzas[i+1];
+	                noFolhaProx->pizzas[i] = NULL;
+	                noFolhaProx->m--;
 	            }
-	            noFolhaProx->pizzas[noFolhaProx->m - 1] = NULL;
-	            noFolhaProx->m--;
 
+	            // REORGANIZA O PRÓXIMO NÓ FOLHA
+	            while(noFolhaProx->pizzas[0] == NULL) {
+	                for(int i = 0; i < (2*d - 1); i++) {
+	                    noFolhaProx->pizzas[i] = noFolhaProx->pizzas[i+1];
+	                }
+	            }
+                noFolhaProx->pizzas[noFolhaProx->m] = NULL;
 
 	            // LÊ O NÓ INTERNO QUE APONTA PARA O PRÓXIMO NÓ E ALTERA O VALOR DA CHAVE
 	            fseek(arq_indice, noFolhaProx->pont_pai, SEEK_SET);
 	            TNoInterno* noInterno = le_no_interno(d, arq_indice);
 
-	            int pontProx = fseek(arq_dados, cod, SEEK_SET);
-
-	            // VARIÁVEL PARA ARMAZENAR A POSIÇÃO DO ÍNDICE À SER ALTERADA
+	            // VARIÁVEL PARA ARMAZENAR QUAL DOS PONTEIROS DO NÓ INTERNO À SER ALTERADA
 	            int controle = 0;
                 TNoFolha* noAux;
-	            for (int i = 0; noInterno->m; i++){
-	                if (noInterno->p[i] == pontProx){
+	            for (int i = 0; i < noInterno->m; i++){
+	                if (noInterno->p[i] == noFolha->pont_prox){
 	                    break;
 	                }
 	                controle++;
@@ -351,6 +354,55 @@ int exclui(int cod, char *nome_arquivo_metadados, char *nome_arquivo_indice, cha
 	            return var_busca;
 	        }
 
+	        // CASO SEJA NECESSÁRIA A CONCATENAÇÃO
+	        else if (noFolha->m + noFolhaProx->m < 2*d) {
+//	            printf("\n-- Concatenação incompleta --\n");
+
+	            fseek(arq_indice, noFolha->pont_pai, SEEK_SET);
+	            TNoInterno * noInterno = le_no_interno(d, arq_indice);
+//	            imprime_no_interno(d, noInterno);
+
+//                printf("\nNo folha atual:");
+//                imprime_no_folha(d, noFolha);
+//                printf("\nNo folha prox:");
+//                imprime_no_folha(d, noFolhaProx);
+
+                // MOVE AS PIZZAS DO PRÓXIMO NÓ PARA O NÓ NO QUAL OCORREU A REMOÇÃO
+                for(int i = 0; noFolhaProx->m > 0; i++) {
+                    noFolha->pizzas[noFolha->m] = noFolhaProx->pizzas[i];
+                    noFolha->m++;
+                    noFolhaProx->m--;
+                }
+
+                // VARIÁVEL PARA ARMAZENAR QUAL DOS PONTEIROS DO NÓ INTERNO À SER ALTERADA
+                int controle = 0;
+                TNoFolha* noAux;
+                for (int i = 0; i < noInterno->m; i++){
+                    if (noInterno->p[i] == noFolha->pont_prox){
+                        break;
+                    }
+                    controle++;
+                }
+
+                // ATUALIZA O NÓ INTERNO
+                for(int i = 0; i < noInterno->m - 1; i++) {
+                    if (i >= controle) {
+                        noInterno->chaves[i] = noInterno->chaves[i+1];
+                        noInterno->p[i] = noInterno->p[i+1];
+                    }
+                }
+                noInterno->chaves[noInterno->m] = -1;
+                noInterno->p[noInterno->m] = -1;
+
+//                printf("\nNo pai:");
+//                imprime_no_interno(d, noInterno);
+//                printf("\nNo folha atual:");
+//                imprime_no_folha(d, noFolha);
+//                printf("\nNo folha prox:");
+//                imprime_no_folha(d, noFolhaProx);
+
+
+            }
 
 	    }
 
