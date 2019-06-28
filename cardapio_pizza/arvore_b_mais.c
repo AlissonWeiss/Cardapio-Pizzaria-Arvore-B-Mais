@@ -163,7 +163,7 @@ int insere(int cod, char *nome, char *categoria, float preco, char *nome_arquivo
             novoNo->pizzas[novoNo->m] = p;
             novoNo->m++;
         }
-        //INSERE NO NÓ FOLHA E MOVE OUTROS PARA NOVO NÓ
+            //INSERE NO NÓ FOLHA E MOVE OUTROS PARA NOVO NÓ
         else {
             int aux_index = 0;
             int aux_tam = noFolha->m;
@@ -240,18 +240,44 @@ int insere(int cod, char *nome, char *categoria, float preco, char *nome_arquivo
             if (noInterno->m == 0){
 
                 noInterno = no_interno_vazio(d);
-                noInterno->chaves[noInterno->m] = noFolha->pizzas[0]->cod;
-                noInterno->p[noInterno->m] = var_busca;
-                noInterno->m++;
-
-                noInterno->p[noInterno->m] = noFolha->pont_prox;
-                noInterno->chaves[noInterno->m] = novoNo->pizzas[0]->cod;
-                noInterno->m++
-                ;
+                noInterno->p[0] = var_busca;
+                noInterno->p[1] = metadados->pont_prox_no_folha_livre;
+                noInterno->chaves[0] = novoNo->pizzas[0]->cod;
+                noInterno->m = 1;
                 noInterno->aponta_folha = 1;
 
-                novoNo->pont_pai = metadados->pont_prox_no_interno_livre;
-                noFolha->pont_pai = metadados->pont_prox_no_interno_livre;
+                fseek(arq_indice, 0, SEEK_SET);
+                salva_no_interno(d, noInterno, arq_indice);
+                free(noInterno);
+
+                fclose(arq_indice);
+                noFolha->pont_prox = metadados->pont_prox_no_folha_livre;
+                noFolha->pont_pai = 0;
+
+                //SALVAR ARQUIVO DE DADOS
+                fseek(arq_dados, var_busca, SEEK_SET);
+                salva_no_folha(d, noFolha, arq_dados);
+
+
+                //SALVA NOVO NÓ FOLHA
+                novoNo->pont_pai = 0;
+                fseek(arq_dados, metadados->pont_prox_no_folha_livre, SEEK_SET);
+                salva_no_folha(d, novoNo, arq_dados);
+                fclose(arq_dados);
+
+                free(noFolha);
+                free(novoNo);
+
+                //ACERTA ARQUIVO DE METADADOS
+                metadados->pont_raiz = 0;
+                metadados->raiz_folha = 0;
+                metadados->pont_prox_no_interno_livre = tamanho_no_interno(d);
+                metadados->pont_prox_no_folha_livre = metadados->pont_prox_no_folha_livre + tamanho_no_folha(d);
+
+                salva_arq_metadados(nome_arquivo_metadados, metadados);
+                free(metadados);
+
+                return var_busca;
 
             }
             else {
@@ -279,21 +305,6 @@ int insere(int cod, char *nome, char *categoria, float preco, char *nome_arquivo
                 }
             }
 
-            if (cod == 11){
-
-                printf("\n\n ---TESTE 11---\n");
-                printf("\nNO INTERNO:\n");
-                imprime_no_interno(d, noInterno);
-                printf("NO FOLHA\n");
-                imprime_no_folha(d, noFolha);
-                printf("NOVO NO\n");
-
-                imprime_no_folha(d, novoNo);
-
-                printf("\n---FIM TESTE 11---\n\n");
-
-            }
-
             //VARIÁVEL PARA TRATAR RETORNO DA FUNÇÃO
             int retorno;
 
@@ -302,7 +313,6 @@ int insere(int cod, char *nome, char *categoria, float preco, char *nome_arquivo
             } else {
                 retorno = metadados->pont_prox_no_folha_livre;
             }
-
 
             //SALVAR ARQUIVO DE INDICE
             fseek(arq_indice, noFolha->pont_pai, SEEK_SET);
@@ -316,8 +326,11 @@ int insere(int cod, char *nome, char *categoria, float preco, char *nome_arquivo
             salva_no_folha(d, novoNo, arq_dados);
 
             //ATUALIZA ARQUIVO DE METADADOS
-            metadados->pont_prox_no_folha_livre = noFolha->pont_prox + tamanho_no_folha(d);
-            metadados->pont_prox_no_interno_livre = noFolha->pont_pai + tamanho_no_interno(d);
+
+            metadados->pont_raiz = 0;
+            metadados->raiz_folha = 0;
+            metadados->pont_prox_no_interno_livre = tamanho_no_interno(d);
+            metadados->pont_prox_no_folha_livre = metadados->pont_prox_no_folha_livre + tamanho_no_folha(d);
 
             salva_arq_metadados(nome_arquivo_metadados, metadados);
 
@@ -338,61 +351,28 @@ int insere(int cod, char *nome, char *categoria, float preco, char *nome_arquivo
 
 int exclui(int cod, char *nome_arquivo_metadados, char *nome_arquivo_indice, char *nome_arquivo_dados, int d)
 {
-	// ABRE OS ARQUIVOS NECESSARIOS
-	FILE * arq_metadados = fopen(nome_arquivo_metadados, "rb+");
-	FILE * arq_indice = fopen(nome_arquivo_indice, "rb+");
-	FILE * arq_dados = fopen(nome_arquivo_dados, "rb+");
+    // ABRE OS ARQUIVOS NECESSARIOS
+    FILE * arq_metadados = fopen(nome_arquivo_metadados, "rb+");
+    FILE * arq_indice = fopen(nome_arquivo_indice, "rb+");
+    FILE * arq_dados = fopen(nome_arquivo_dados, "rb+");
 
-	int var_busca = busca(cod, nome_arquivo_metadados, nome_arquivo_indice, nome_arquivo_dados, d);
+    int var_busca = busca(cod, nome_arquivo_metadados, nome_arquivo_indice, nome_arquivo_dados, d);
 
-	// CASO A BUSCA RETORNE -1, A PIZZA NÃO FOI ENCONTRADA E POR ISSO NÃO PODE FAZER A REMOÇÃO
-	if (var_busca == -1)
-	    return -1;
-	else {
+    // CASO A BUSCA RETORNE -1, A PIZZA NÃO FOI ENCONTRADA E POR ISSO NÃO PODE FAZER A REMOÇÃO
+    if (var_busca == -1)
+        return -1;
+    else {
 
-	    // SETA O PONTEIRO PARA O ENDEREÇO RETORNADO NA BUSCA
-	    fseek(arq_dados, var_busca, SEEK_SET);
+        // SETA O PONTEIRO PARA O ENDEREÇO RETORNADO NA BUSCA
+        fseek(arq_dados, var_busca, SEEK_SET);
 
-	    // LÊ O NÓ FOLHA
-	    TNoFolha* noFolha = le_no_folha(d, arq_dados);
+        // LÊ O NÓ FOLHA
+        TNoFolha* noFolha = le_no_folha(d, arq_dados);
 
-	    // CASO A REMOÇÃO VÁ MANTER O NÓ FOLHA COM TAMANHO SUFICIENTE
-	    if (noFolha->m > d) {
+        // CASO A REMOÇÃO VÁ MANTER O NÓ FOLHA COM TAMANHO SUFICIENTE
+        if (noFolha->m > d) {
 
-	        // REMOVE A PIZZA DA FOLHA
-	        for(int i = 0; i < noFolha->m; i++) {
-
-	            if (cod == noFolha->pizzas[i]->cod) {
-                    for (int j = i; j < noFolha->m - 1; j++) {
-                        noFolha->pizzas[j] = noFolha->pizzas[j + 1];
-                    }
-
-                    noFolha->pizzas[noFolha->m - 1] = NULL;
-                    free(noFolha->pizzas[noFolha->m - 1]);
-
-                    noFolha->m--;
-                    break;
-                }
-	        }
-
-	        // SALVA O NÓ FOLHA NO ARQUIVO DE DADOS E FECHA OS ARQUIVOS
-	        fseek(arq_dados, var_busca, SEEK_SET);
-	        salva_no_folha(d, noFolha, arq_dados);
-	        fclose(arq_metadados);
-	        fclose(arq_indice);
-	        fclose(arq_dados);
-
-	        // LIMPA O NÓ AUXILIAR
-	        libera_no_folha(d, noFolha);
-
-	        // RETORNA A PIZZA REMOVIDA
-	        return var_busca;
-
-	    }
-	    else {
-	        // CASO SEJA NECESSÁRIO FAZER CONCATENAÇÃO OU REDISTRIBUIÇÃO
-
-	        // REMOVE A PIZZA DA FOLHA
+            // REMOVE A PIZZA DA FOLHA
             for(int i = 0; i < noFolha->m; i++) {
 
                 if (cod == noFolha->pizzas[i]->cod) {
@@ -408,75 +388,108 @@ int exclui(int cod, char *nome_arquivo_metadados, char *nome_arquivo_indice, cha
                 }
             }
 
-	        // LÊ O PRÓXIMO NÓ FOLHA
-	        fseek(arq_dados, noFolha->pont_prox, SEEK_SET);
-	        TNoFolha* noFolhaProx = le_no_folha(d, arq_dados);
+            // SALVA O NÓ FOLHA NO ARQUIVO DE DADOS E FECHA OS ARQUIVOS
+            fseek(arq_dados, var_busca, SEEK_SET);
+            salva_no_folha(d, noFolha, arq_dados);
+            fclose(arq_metadados);
+            fclose(arq_indice);
+            fclose(arq_dados);
 
-	        // CASO SEJA POSSÍVEL FAZER A REDISTRIBUIÇÃO COM O NÓ FOLHA DA DIREITA
-	        if (noFolha->m + noFolhaProx->m >= (2 * d)) {
+            // LIMPA O NÓ AUXILIAR
+            libera_no_folha(d, noFolha);
+
+            // RETORNA A PIZZA REMOVIDA
+            return var_busca;
+
+        }
+        else {
+            // CASO SEJA NECESSÁRIO FAZER CONCATENAÇÃO OU REDISTRIBUIÇÃO
+
+            // REMOVE A PIZZA DA FOLHA
+            for(int i = 0; i < noFolha->m; i++) {
+
+                if (cod == noFolha->pizzas[i]->cod) {
+                    for (int j = i; j < noFolha->m - 1; j++) {
+                        noFolha->pizzas[j] = noFolha->pizzas[j + 1];
+                    }
+
+                    noFolha->pizzas[noFolha->m - 1] = NULL;
+                    free(noFolha->pizzas[noFolha->m - 1]);
+
+                    noFolha->m--;
+                    break;
+                }
+            }
+
+            // LÊ O PRÓXIMO NÓ FOLHA
+            fseek(arq_dados, noFolha->pont_prox, SEEK_SET);
+            TNoFolha* noFolhaProx = le_no_folha(d, arq_dados);
+
+            // CASO SEJA POSSÍVEL FAZER A REDISTRIBUIÇÃO COM O NÓ FOLHA DA DIREITA
+            if (noFolha->m + noFolhaProx->m >= (2 * d)) {
 
                 // PASSA AS D PRIMEIRAS PIZZAS DO PRÓXIMO NÓ FOLHA PARA O NÓ EM QUE OCORREU A REMOÇÃO
-	            for(int i = 0; noFolha->m < d; i++) {
-	                noFolha->pizzas[i + noFolha->m] = noFolhaProx->pizzas[i];
-	                noFolha->m++;
+                for(int i = 0; noFolha->m < d; i++) {
+                    noFolha->pizzas[i + noFolha->m] = noFolhaProx->pizzas[i];
+                    noFolha->m++;
 
-	                noFolhaProx->pizzas[i] = NULL;
-	                noFolhaProx->m--;
-	            }
+                    noFolhaProx->pizzas[i] = NULL;
+                    noFolhaProx->m--;
+                }
 
-	            // REORGANIZA O PRÓXIMO NÓ FOLHA
-	            while(noFolhaProx->pizzas[0] == NULL) {
-	                for(int i = 0; i < (2*d - 1); i++) {
-	                    noFolhaProx->pizzas[i] = noFolhaProx->pizzas[i+1];
-	                }
-	            }
+                // REORGANIZA O PRÓXIMO NÓ FOLHA
+                while(noFolhaProx->pizzas[0] == NULL) {
+                    for(int i = 0; i < (2*d - 1); i++) {
+                        noFolhaProx->pizzas[i] = noFolhaProx->pizzas[i+1];
+                    }
+                }
                 noFolhaProx->pizzas[noFolhaProx->m] = NULL;
 
-	            // LÊ O NÓ INTERNO QUE APONTA PARA O PRÓXIMO NÓ E ALTERA O VALOR DA CHAVE
-	            fseek(arq_indice, noFolhaProx->pont_pai, SEEK_SET);
-	            TNoInterno* noInterno = le_no_interno(d, arq_indice);
+                // LÊ O NÓ INTERNO QUE APONTA PARA O PRÓXIMO NÓ E ALTERA O VALOR DA CHAVE
+                fseek(arq_indice, noFolhaProx->pont_pai, SEEK_SET);
+                TNoInterno* noInterno = le_no_interno(d, arq_indice);
 
-	            // VARIÁVEL PARA ARMAZENAR QUAL DOS PONTEIROS DO NÓ INTERNO À SER ALTERADA
-	            int controle = 0;
-	            for (int i = 0; i < noInterno->m; i++){
-	                if (noInterno->p[i] == noFolha->pont_prox){
-	                    break;
-	                }
-	                controle++;
-	            }
+                // VARIÁVEL PARA ARMAZENAR QUAL DOS PONTEIROS DO NÓ INTERNO À SER ALTERADA
+                int controle = 0;
+                for (int i = 0; i < noInterno->m; i++){
+                    if (noInterno->p[i] == noFolha->pont_prox){
+                        break;
+                    }
+                    controle++;
+                }
 
-	            // ATUALIZA O NÓ INTERNO
-	            noInterno->chaves[controle-1] = noFolhaProx->pizzas[0]->cod;
+                // ATUALIZA O NÓ INTERNO
+                noInterno->chaves[controle-1] = noFolhaProx->pizzas[0]->cod;
 
-	            // SALVA AS ALTERAÇÕES NO DISCO
-	            fseek(arq_dados, var_busca, SEEK_SET);
-	            salva_no_folha(d, noFolha, arq_dados);
+                // SALVA AS ALTERAÇÕES NO DISCO
+                fseek(arq_dados, var_busca, SEEK_SET);
+                salva_no_folha(d, noFolha, arq_dados);
 
-	            fseek(arq_dados, noFolha->pont_prox, SEEK_SET);
-	            salva_no_folha(d, noFolhaProx, arq_dados);
+                fseek(arq_dados, noFolha->pont_prox, SEEK_SET);
+                salva_no_folha(d, noFolhaProx, arq_dados);
 
-	            fseek(arq_indice, noFolha->pont_pai, SEEK_SET);
-	            salva_no_interno(d, noInterno, arq_indice);
+                fseek(arq_indice, noFolha->pont_pai, SEEK_SET);
+                salva_no_interno(d, noInterno, arq_indice);
 
-	            // FECHA ARQUIVOS
-	            fclose(arq_metadados);
-	            fclose(arq_indice);
-	            fclose(arq_dados);
+                // FECHA ARQUIVOS
+                fclose(arq_metadados);
+                fclose(arq_indice);
+                fclose(arq_dados);
 
-	            // LIMPA OS NÓS AUXILIARES
-	            libera_no_folha(d, noFolha);
-	            libera_no_folha(d, noFolhaProx);
-	            libera_no_interno(noInterno);
+                // LIMPA OS NÓS AUXILIARES
+                libera_no_folha(d, noFolha);
+                libera_no_folha(d, noFolhaProx);
+                libera_no_interno(noInterno);
 
-	            return var_busca;
-	        }
+                return var_busca;
+            }
 
-	        // CASO SEJA NECESSÁRIA A CONCATENAÇÃO
-	        else if (noFolha->m + noFolhaProx->m < 2*d) {
+                // CASO SEJA NECESSÁRIA A CONCATENAÇÃO
+            else if (noFolha->m + noFolhaProx->m < 2*d) {
 //	            printf("\n-- Concatenação incompleta --\n");
 
-	            fseek(arq_indice, noFolha->pont_pai, SEEK_SET);
-	            TNoInterno * noInterno = le_no_interno(d, arq_indice);
+                fseek(arq_indice, noFolha->pont_pai, SEEK_SET);
+                TNoInterno * noInterno = le_no_interno(d, arq_indice);
 
                 // MOVE AS PIZZAS DO PRÓXIMO NÓ PARA O NÓ NO QUAL OCORREU A REMOÇÃO
                 for(int i = 0; noFolhaProx->m > 0; i++) {
@@ -524,9 +537,9 @@ int exclui(int cod, char *nome_arquivo_metadados, char *nome_arquivo_indice, cha
 
             }
 
-	    }
+        }
 
-	}
+    }
 
     return INT_MAX;
 }
