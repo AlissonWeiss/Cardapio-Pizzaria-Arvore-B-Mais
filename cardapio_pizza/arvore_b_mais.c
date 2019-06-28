@@ -75,6 +75,7 @@ int insere(int cod, char *nome, char *categoria, float preco, char *nome_arquivo
     FILE * arq_dados = fopen(nome_arquivo_dados, "rb+");
     FILE * arq_metadados = fopen(nome_arquivo_metadados, "rb+");
 
+
     //LÊ ARQUIVO DE METADADOS
     TMetadados * metadados = le_arq_metadados(nome_arquivo_metadados);
 
@@ -206,20 +207,18 @@ int insere(int cod, char *nome, char *categoria, float preco, char *nome_arquivo
             }
         }
 
+        //LÊ ARQUIVO DE METADADOS
         metadados = le_arq_metadados(nome_arquivo_metadados);
-
 
         //ATUALIZA O PONTEIRO DO NOVO NÓ
         noFolha->pont_prox = metadados->pont_prox_no_folha_livre;
-
-        //ATUALIZA O PRÓXIMO PONTEIRO PRA NÓ FOLHA LIVRE
-        metadados->pont_prox_no_folha_livre = noFolha->pont_prox + tamanho_no_folha(d);
 
         //INICIALIZA NO INTERNO
         TNoInterno * noInterno;
 
         //VERIFICA SE RAIZ É FOLHA
         if (metadados->raiz_folha){
+
             //SE FOR FOLHA, CRIA NO INTERNO
             noInterno = no_interno_vazio(d);
         }
@@ -236,11 +235,33 @@ int insere(int cod, char *nome, char *categoria, float preco, char *nome_arquivo
 
         //AINDA HÁ ESPAÇO PARA ADICIONAR CHAVES NO PAI
         if (noInterno->m < (2 * d)) {
-            
-            //ADICIONA CHAVE NO FINAL DO NO INTERNO
-            noInterno->chaves[noInterno->m] = chave;
-            noInterno->p[noInterno->m + 1] = chave_pont;
-            noInterno->m++;
+
+            //VERIFICA SE NÓ INTERNO ESTÁ VAZIO, OU SEJA, É NOVO
+            if (noInterno->m == 0){
+
+                noInterno = no_interno_vazio(d);
+                noInterno->chaves[noInterno->m] = noFolha->pizzas[0]->cod;
+                noInterno->p[noInterno->m] = var_busca;
+                noInterno->m++;
+
+                noInterno->p[noInterno->m] = noFolha->pont_prox;
+                noInterno->chaves[noInterno->m] = novoNo->pizzas[0]->cod;
+                noInterno->m++
+                ;
+                noInterno->aponta_folha = 1;
+
+                novoNo->pont_pai = metadados->pont_prox_no_interno_livre;
+                noFolha->pont_pai = metadados->pont_prox_no_interno_livre;
+
+            }
+            else {
+
+                //ADICIONA CHAVE NO FINAL DO NO INTERNO
+                noInterno->chaves[noInterno->m] = chave;
+                noInterno->p[noInterno->m + 1] = chave_pont;
+                noInterno->m++;
+
+            }
 
             //REORDENA NÓ INTERNO
             for (int i = 1; i < noInterno->m; i++) {
@@ -258,6 +279,22 @@ int insere(int cod, char *nome, char *categoria, float preco, char *nome_arquivo
                 }
             }
 
+            if (cod == 11){
+
+                printf("\n\n ---TESTE 11---\n");
+                printf("\nNO INTERNO:\n");
+                imprime_no_interno(d, noInterno);
+                printf("NO FOLHA\n");
+                imprime_no_folha(d, noFolha);
+                printf("NOVO NO\n");
+
+                imprime_no_folha(d, novoNo);
+
+                printf("\n---FIM TESTE 11---\n\n");
+
+            }
+
+            //VARIÁVEL PARA TRATAR RETORNO DA FUNÇÃO
             int retorno;
 
             if (trocou_folha == 0) {
@@ -265,6 +302,11 @@ int insere(int cod, char *nome, char *categoria, float preco, char *nome_arquivo
             } else {
                 retorno = metadados->pont_prox_no_folha_livre;
             }
+
+
+            //SALVAR ARQUIVO DE INDICE
+            fseek(arq_indice, noFolha->pont_pai, SEEK_SET);
+            salva_no_interno(d, noInterno, arq_indice);
 
             //SALVA ARQUIVOS DE DADOS
             fseek(arq_dados, var_busca, SEEK_SET);
@@ -275,12 +317,7 @@ int insere(int cod, char *nome, char *categoria, float preco, char *nome_arquivo
 
             //ATUALIZA ARQUIVO DE METADADOS
             metadados->pont_prox_no_folha_livre = noFolha->pont_prox + tamanho_no_folha(d);
-
-            //SALVAR ARQUIVO DE INDICE
-            fseek(arq_indice, noFolha->pont_pai, SEEK_SET);
-            salva_no_interno(d, noInterno, arq_indice);
-
-            fseek(arq_indice, noFolha->pont_pai, SEEK_SET);
+            metadados->pont_prox_no_interno_livre = noFolha->pont_pai + tamanho_no_interno(d);
 
             salva_arq_metadados(nome_arquivo_metadados, metadados);
 
@@ -291,8 +328,6 @@ int insere(int cod, char *nome, char *categoria, float preco, char *nome_arquivo
             return retorno;
 
         }
-
-
 
     }
 
@@ -481,11 +516,9 @@ int exclui(int cod, char *nome_arquivo_metadados, char *nome_arquivo_indice, cha
                 fseek(arq_indice, noFolha->pont_pai, SEEK_SET);
                 salva_no_interno(d, noInterno, arq_indice);
 
-               //  TESTES
-                TMetadados* meta = le_arq_metadados(nome_arquivo_metadados);
-                fseek(arq_indice, meta->pont_raiz, SEEK_SET);
-                TNoInterno* raiz = le_no_interno(d, arq_indice);
-                fseek(arq_dados, raiz->p[0], SEEK_SET);
+                fclose(arq_dados);
+                fclose(arq_indice);
+                fclose(arq_metadados);
 
                 return var_busca;
 
