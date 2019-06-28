@@ -239,41 +239,37 @@ int insere(int cod, char *nome, char *categoria, float preco, char *nome_arquivo
             //VERIFICA SE NÓ INTERNO ESTÁ VAZIO, OU SEJA, É NOVO
             if (noInterno->m == 0){
 
-                noInterno = no_interno_vazio(d);
+                //AJUSTA OS PONTEIROS E CHAVES DO NÓ INTERNO
                 noInterno->p[0] = var_busca;
                 noInterno->p[1] = metadados->pont_prox_no_folha_livre;
                 noInterno->chaves[0] = novoNo->pizzas[0]->cod;
                 noInterno->m = 1;
                 noInterno->aponta_folha = 1;
 
+                //SALVA NÓ INTERNO E FECHA ARQUIVO
                 fseek(arq_indice, 0, SEEK_SET);
                 salva_no_interno(d, noInterno, arq_indice);
-                free(noInterno);
-
                 fclose(arq_indice);
+
+                //AJUSTA PONTEIROS DO NÓ FOLHA
                 noFolha->pont_prox = metadados->pont_prox_no_folha_livre;
                 noFolha->pont_pai = 0;
 
-                //SALVAR ARQUIVO DE DADOS
+                //SALVA ARQUIVO DE DADOS
                 fseek(arq_dados, var_busca, SEEK_SET);
                 salva_no_folha(d, noFolha, arq_dados);
 
-
-                //SALVA NOVO NÓ FOLHA
+                //SALVA NOVO NÓ FOLHA E FECHA ARQ DADOS
                 novoNo->pont_pai = 0;
                 fseek(arq_dados, metadados->pont_prox_no_folha_livre, SEEK_SET);
                 salva_no_folha(d, novoNo, arq_dados);
                 fclose(arq_dados);
 
-                free(noFolha);
-                free(novoNo);
-
-                //ACERTA ARQUIVO DE METADADOS
+                //ACERTA ARQUIVO DE METADADOS, SALVA E FECHA ARQUIVO
                 metadados->pont_raiz = 0;
                 metadados->raiz_folha = 0;
-                metadados->pont_prox_no_interno_livre = tamanho_no_interno(d);
+                metadados->pont_prox_no_interno_livre = metadados->pont_prox_no_interno_livre + tamanho_no_interno(d);
                 metadados->pont_prox_no_folha_livre = metadados->pont_prox_no_folha_livre + tamanho_no_folha(d);
-
                 salva_arq_metadados(nome_arquivo_metadados, metadados);
                 free(metadados);
 
