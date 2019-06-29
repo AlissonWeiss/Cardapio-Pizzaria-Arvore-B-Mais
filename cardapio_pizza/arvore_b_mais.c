@@ -571,6 +571,19 @@ int exclui(int cod, char *nome_arquivo_metadados, char *nome_arquivo_indice, cha
             fseek(arq_dados, noFolha->pont_prox, SEEK_SET);
             TNoFolha* noFolhaProx = le_no_folha(d, arq_dados);
 
+            // LÊ O NÓ INTERNO QUE APONTA PARA O PRÓXIMO NÓ PARA ALTERAR O VALOR DA CHAVE
+            fseek(arq_indice, noFolhaProx->pont_pai, SEEK_SET);
+            TNoInterno* noInterno = le_no_interno(d, arq_indice);
+
+            // VARIÁVEL PARA ARMAZENAR QUAL DOS PONTEIROS DO NÓ INTERNO À SER ALTERADA
+            int controle = 0;
+            for (int i = 0; i < noInterno->m; i++){
+                if (noInterno->p[i] == noFolha->pont_prox){
+                    break;
+                }
+                controle++;
+            }
+
             // CASO SEJA POSSÍVEL FAZER A REDISTRIBUIÇÃO COM O NÓ FOLHA DA DIREITA
             if (noFolha->m + noFolhaProx->m >= (2 * d)) {
 
@@ -590,19 +603,6 @@ int exclui(int cod, char *nome_arquivo_metadados, char *nome_arquivo_indice, cha
                     }
                 }
                 noFolhaProx->pizzas[noFolhaProx->m] = NULL;
-
-                // LÊ O NÓ INTERNO QUE APONTA PARA O PRÓXIMO NÓ E ALTERA O VALOR DA CHAVE
-                fseek(arq_indice, noFolhaProx->pont_pai, SEEK_SET);
-                TNoInterno* noInterno = le_no_interno(d, arq_indice);
-
-                // VARIÁVEL PARA ARMAZENAR QUAL DOS PONTEIROS DO NÓ INTERNO À SER ALTERADA
-                int controle = 0;
-                for (int i = 0; i < noInterno->m; i++){
-                    if (noInterno->p[i] == noFolha->pont_prox){
-                        break;
-                    }
-                    controle++;
-                }
 
                 // ATUALIZA O NÓ INTERNO
                 noInterno->chaves[controle-1] = noFolhaProx->pizzas[0]->cod;
@@ -632,10 +632,6 @@ int exclui(int cod, char *nome_arquivo_metadados, char *nome_arquivo_indice, cha
 
                 // CASO SEJA NECESSÁRIA A CONCATENAÇÃO
             else if (noFolha->m + noFolhaProx->m < 2*d) {
-//	            printf("\n-- Concatenação incompleta --\n");
-
-                fseek(arq_indice, noFolha->pont_pai, SEEK_SET);
-                TNoInterno * noInterno = le_no_interno(d, arq_indice);
 
                 // MOVE AS PIZZAS DO PRÓXIMO NÓ PARA O NÓ NO QUAL OCORREU A REMOÇÃO
                 int cont = noFolhaProx->m;
@@ -644,15 +640,6 @@ int exclui(int cod, char *nome_arquivo_metadados, char *nome_arquivo_indice, cha
                     noFolha->m++;
 //                    noFolhaProx->m--;
                     cont--;
-                }
-
-                // VARIÁVEL PARA ARMAZENAR QUAL DOS PONTEIROS DO NÓ INTERNO À SER ALTERADA
-                int controle = 0;
-                for (int i = 0; i < noInterno->m; i++){
-                    if (noInterno->p[i] == noFolha->pont_prox){
-                        break;
-                    }
-                    controle++;
                 }
 
                 // ATUALIZA O NÓ INTERNO
