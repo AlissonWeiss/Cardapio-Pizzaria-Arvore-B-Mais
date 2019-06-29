@@ -337,6 +337,156 @@ int insere(int cod, char *nome, char *categoria, float preco, char *nome_arquivo
             return retorno;
 
         }
+        //CASO NÃO HAJA MAIS ESPAÇO NO NÓ INTERNO (PAI)
+        else{
+
+            //ENCONTRA O INDICE A SER ADICIONADO A CHAVE
+            controle = 0;
+            for (int i = 0; i < noInterno->m; i++){
+                if (novoNo->pizzas[0]->cod < noInterno->chaves[i])
+                     break;
+                controle++;
+            }
+
+            //CRIA NOVO NÓ INTERNO
+            TNoInterno * novoNoInterno = no_interno_vazio(d);
+            novoNoInterno->pont_pai = noInterno->pont_pai;
+            novoNoInterno->aponta_folha = noInterno->aponta_folha;
+            int pont_novo_no_interno = metadados->pont_prox_no_interno_livre;
+
+            //ATUALIZA METADADOS
+            metadados->pont_prox_no_interno_livre = metadados->pont_prox_no_interno_livre + tamanho_no_interno(d);
+            salva_arq_metadados(nome_arquivo_metadados, metadados);
+            metadados = le_arq_metadados(nome_arquivo_metadados);
+
+            //POSIÇÕES MAIORES QUE D VÃO PARA O NOVO NÓ INTERNO
+            if (controle >= d) {
+                int aux_index = 0;
+                int aux_tam = noInterno->m;
+                for (int i = d; i < aux_tam; i++) {
+
+                    novoNoInterno->chaves[aux_index] = noInterno->chaves[i];
+                    novoNoInterno->p[aux_index] = noInterno->p[i + 1];
+
+                    noInterno->chaves[i] = -1;
+                    noInterno->p[i + 1] = -1;
+
+                    noInterno->m--;
+                    novoNoInterno->m++;
+
+                    aux_index++;
+                }
+                //ADICIONA NOVA CHAVE NO FINAL DO NOVO NÓ INTERNO
+                novoNoInterno->chaves[novoNoInterno->m] = chave;
+                novoNoInterno->p[novoNoInterno->m + 1] = chave_pont;
+                novoNoInterno->m++;
+            }
+                //INSERE NO NÓ INTERNO E MOVE OUTROS PARA NOVO NÓ
+            else {
+                int aux_index = 0;
+                int aux_tam = noInterno->m;
+                for (int i = 0; i < aux_tam; i++) {
+
+                    if (i >= d - 1) {
+
+                        novoNoInterno->chaves[aux_index] = noInterno->chaves[i];
+                        novoNoInterno->p[aux_index] = noInterno->p[i + 1];
+
+                        noInterno->chaves[i] = -1;
+                        noInterno->p[i + 1] = -1;
+
+                        noInterno->m--;
+                        novoNoInterno->m++;
+
+                        aux_index++;
+                    }
+                }
+                noInterno->chaves[noInterno->m] = novoNo->pizzas[0]->cod;
+                noInterno->p[noInterno->m + 1] = noFolha->pont_prox;
+                noInterno->m++;
+
+            }
+
+            //REORDENA NÓ INTERNO
+            for (int i = 1; i < noInterno->m; i++) {
+                for (int j = 0; j < noInterno->m - i; j++) {
+                    if (noInterno->chaves[j] > noInterno->chaves[j + 1]) {
+                        int aux = noInterno->chaves[j];
+                        int pont_aux = noInterno->p[j + 1];
+
+                        noInterno->chaves[j] = noInterno->chaves[j + 1];
+                        noInterno->p[j + 1] = noInterno->p[j + 2];
+
+                        noInterno->chaves[j + 1] = aux;
+                        noInterno->p[j + 2] = pont_aux;
+                    }
+                }
+            }
+            //REORDENA NOVO NÓ INTERNO
+            for (int i = 1; i < novoNoInterno->m; i++) {
+                for (int j = 0; j < novoNoInterno->m - i; j++) {
+                    if (novoNoInterno->chaves[j] > novoNoInterno->chaves[j + 1]) {
+                        int aux = novoNoInterno->chaves[j];
+                        int pont_aux = novoNoInterno->p[j + 1];
+
+                        novoNoInterno->chaves[j] = novoNoInterno->chaves[j + 1];
+                        novoNoInterno->p[j + 1] = novoNoInterno->p[j + 2];
+
+                        novoNoInterno->chaves[j + 1] = aux;
+                        novoNoInterno->p[j + 2] = pont_aux;
+                    }
+                }
+            }
+
+            TNoInterno * paiNoInterno;
+            //VERIFICA SE POSSUI PAI
+            if (noInterno->pont_pai == -1){
+                paiNoInterno = no_interno_vazio(d);
+
+                paiNoInterno->pont_pai = noInterno->pont_pai;
+                paiNoInterno->p[0] = noFolha->pont_pai;
+
+                paiNoInterno->chaves[0] = novoNoInterno->chaves[0];
+                paiNoInterno->p[1] = pont_novo_no_interno;
+                paiNoInterno->m++;
+
+                //MOVER AS CHAVES DE NOVO NÓ INTERNO PARA ESQUERDA
+                for (int i = 0; i < novoNoInterno->m; i++){
+                    novoNoInterno->chaves[i] = novoNoInterno->chaves[i + 1];
+                }
+                novoNoInterno->m--;
+
+                noInterno->pont_pai = metadados->pont_prox_no_interno_livre;
+                novoNoInterno->pont_pai = metadados->pont_prox_no_interno_livre;
+
+                //ATUALIZA METADADOS
+                metadados->pont_prox_no_interno_livre = metadados->pont_prox_no_interno_livre + tamanho_no_interno(d);
+                metadados->pont_raiz = noInterno->pont_pai;
+                metadados->pont_prox_no_folha_livre = metadados->pont_prox_no_folha_livre + tamanho_no_folha(d);
+                salva_arq_metadados(nome_arquivo_metadados, metadados);
+
+                fseek(arq_indice, noInterno->pont_pai, SEEK_SET);
+                salva_no_interno(d, paiNoInterno, arq_indice);
+
+                fseek(arq_indice, paiNoInterno->p[0], SEEK_SET);
+                salva_no_interno(d, noInterno, arq_indice);
+
+                fseek(arq_indice, pont_novo_no_interno, SEEK_SET);
+                salva_no_interno(d, novoNoInterno, arq_indice);
+
+                fclose(arq_indice);
+
+                fseek(arq_dados, var_busca, SEEK_SET);
+                salva_no_folha(d, noFolha, arq_dados);
+
+                fseek(arq_dados, noFolha->pont_prox, SEEK_SET);
+                salva_no_folha(d, novoNo, arq_dados);
+
+                return noFolha->pont_prox;
+
+            }
+
+        }
 
     }
 
