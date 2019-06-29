@@ -638,10 +638,12 @@ int exclui(int cod, char *nome_arquivo_metadados, char *nome_arquivo_indice, cha
                 TNoInterno * noInterno = le_no_interno(d, arq_indice);
 
                 // MOVE AS PIZZAS DO PRÓXIMO NÓ PARA O NÓ NO QUAL OCORREU A REMOÇÃO
-                for(int i = 0; noFolhaProx->m > 0; i++) {
+                int cont = noFolhaProx->m;
+                for(int i = 0; cont > 0; i++) {
                     noFolha->pizzas[noFolha->m] = noFolhaProx->pizzas[i];
                     noFolha->m++;
-                    noFolhaProx->m--;
+//                    noFolhaProx->m--;
+                    cont--;
                 }
 
                 // VARIÁVEL PARA ARMAZENAR QUAL DOS PONTEIROS DO NÓ INTERNO À SER ALTERADA
@@ -664,9 +666,8 @@ int exclui(int cod, char *nome_arquivo_metadados, char *nome_arquivo_indice, cha
                 noInterno->p[noInterno->m] = -1;
                 noInterno->m--;
 
-                // ATUALIZA O PONTEIRO DO NÓ FOLHA E LIMPA A PRÓX FOLHA
+                // ATUALIZA O PONTEIRO DO NÓ FOLHA
                 noFolha->pont_prox = noFolhaProx->pont_prox;
-                libera_no_folha(d, noFolhaProx);
 
                 // SALVA ALTERAÇÕES NO DISCO
                 fseek(arq_dados, var_busca, SEEK_SET);
@@ -678,6 +679,11 @@ int exclui(int cod, char *nome_arquivo_metadados, char *nome_arquivo_indice, cha
                 fclose(arq_dados);
                 fclose(arq_indice);
                 fclose(arq_metadados);
+
+                // LIBERA NÓS AUXILIARES
+                libera_no_folha(d, noFolhaProx);
+//                libera_no_folha(d, noFolha);
+                libera_no_interno(noInterno);
 
                 return var_busca;
 
