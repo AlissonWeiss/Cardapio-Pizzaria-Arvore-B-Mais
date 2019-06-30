@@ -354,6 +354,8 @@ int insere(int cod, char *nome, char *categoria, float preco, char *nome_arquivo
             novoNoInterno->aponta_folha = noInterno->aponta_folha;
             int pont_novo_no_interno = metadados->pont_prox_no_interno_livre;
 
+            novoNo->pont_pai = pont_novo_no_interno;
+
             //ATUALIZA METADADOS
             metadados->pont_prox_no_interno_livre = metadados->pont_prox_no_interno_livre + tamanho_no_interno(d);
             salva_arq_metadados(nome_arquivo_metadados, metadados);
@@ -474,20 +476,22 @@ int insere(int cod, char *nome, char *categoria, float preco, char *nome_arquivo
                 fseek(arq_indice, pont_novo_no_interno, SEEK_SET);
                 salva_no_interno(d, novoNoInterno, arq_indice);
 
-                fclose(arq_indice);
-
                 fseek(arq_dados, var_busca, SEEK_SET);
                 salva_no_folha(d, noFolha, arq_dados);
 
+                novoNo->pont_pai = 0;
+                printf("NOVO NO: %d\n", novoNo->pont_pai);
+                printf("NOVO NO: %d\n", novoNo->pizzas[0]->cod);
                 fseek(arq_dados, noFolha->pont_prox, SEEK_SET);
                 salva_no_folha(d, novoNo, arq_dados);
+
+                fclose(arq_indice);
+                fclose(arq_dados);
 
                 return noFolha->pont_prox;
 
             }
-
         }
-
     }
 
     //RETORNO COM ERRO

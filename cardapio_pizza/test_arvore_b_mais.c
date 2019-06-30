@@ -725,6 +725,12 @@ BEGIN_TESTS();
         );
         TListaNosFolhas *tabDadosSaida = le_nos_folhas(D, NOME_ARQUIVO_DADOS);
         ASSERT_EQUAL_CMP(D, tabDados, tabDadosSaida, cmp_nos_folhas);
+
+        printf("TABELA DE DADOS\n");
+        imprime_nos_folhas(D, tabDadosSaida);
+        printf("TABELA DE DADOS ESPERADA\n");
+        imprime_nos_folhas(D, tabDados);
+
         libera_nos_folhas(D, tabDados);
         libera_nos_folhas(D, tabDadosSaida);
     }
