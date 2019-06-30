@@ -653,6 +653,111 @@ int exclui(int cod, char *nome_arquivo_metadados, char *nome_arquivo_indice, cha
                 noInterno->p[noInterno->m] = -1;
                 noInterno->m--;
 
+                // CHECA SE É PRECISO PROPAGAR A CONCATENAÇÃO
+                if(noInterno->pont_pai != -1 && noInterno->m < d) {
+
+                    // LÊ O PAI DO NÓ INTERNO
+                    fseek(arq_indice, noInterno->pont_pai, SEEK_SET);
+                    TNoInterno* noInternoPai = le_no_interno(d, arq_indice);
+
+                    // BUSCA O PONTEIRO PARA O NÓ INTERNO QUE PRECISA SER CONCATENADO
+                    int controle = 0;
+                    for(int i = 0; i < noInternoPai->m; i++) {
+                        if(noInternoPai->p[i] == noFolha->pont_pai)
+                            break;
+                        controle++;
+                    }
+
+                    // LÊ O PRÓXIMO NÓ INTERNO
+                    fseek(arq_indice, noInternoPai->p[controle+1], SEEK_SET);
+                    TNoInterno* noInternoProx = le_no_interno(d, arq_indice);
+
+                    // CHECA SE É POSSÍVEL FAZER A CONCATENAÇÃO
+                    if (noInterno->m + noInternoProx->m < 2*d) {
+
+                        // ATUALIZA O PRIMEIRO ELEMENTO DO NOINTERNOPROX PARA APONTAR PRO NÓ CERTO
+                        if(noInternoProx->aponta_folha == 1) {
+                            fseek(arq_dados, noInternoProx->p[0], SEEK_SET);
+                            TNoFolha* noFolhaAux = le_no_folha(d, arq_dados);
+
+                            noFolhaAux->pont_pai = noFolha->pont_pai;
+
+                            fseek(arq_dados,noInternoProx->p[0], SEEK_SET);
+                            salva_no_folha(d, noFolhaAux, arq_dados);
+                            libera_no_folha(d, noFolhaAux);
+                        }
+                        else if (noInternoProx->aponta_folha == 0) {
+                            fseek(arq_indice, noInternoProx->p[0], SEEK_SET);
+                            TNoInterno* noInternoAux = le_no_interno(d, arq_indice);
+
+                            noInternoAux->pont_pai = noInternoPai->p[controle];
+
+                            fseek(arq_indice,noInternoProx->p[0], SEEK_SET);
+                            salva_no_interno(d, noInternoAux, arq_indice);
+                            libera_no_interno(noInternoAux);
+                        }
+
+                        // PASSA A CHAVE DO NÓ PAI E O PRIMEIRO PONTEIRO DO NOINTERNOPROX PRO NÓ ONDE OCORREU A REMOÇÃO
+                        noInterno->p[noInterno->m+1] = noInternoProx->p[0];
+                        noInterno->chaves[noInterno->m] = noInternoPai->chaves[controle];
+                        noInterno->m++;
+
+                        // ATUALIZA O NÓ PAI
+                        noInternoPai->p[controle+1] = -1;
+                        noInternoPai->chaves[controle] = -1;
+                        noInternoPai->m--;
+
+                        for(int i = 0; i < 2*d - 1; i++) {
+                            if (i >= controle) {
+                                noInternoPai->chaves[i] = noInternoPai->chaves[i+1];
+                                noInternoPai->p[i+1] = noInternoPai->p[i+2];
+                            }
+                        }
+
+                        // CASO O NÓ PAI ERA RAIZ DA ÁRVORE E ELE AGORA ESTÁ VAZIO
+                        if (noInternoPai->m == 0 && noInternoPai->pont_pai == -1) {
+
+                            // LÊ ARQUIVO DE METADADOS PARA ATUALIZAR O NÓ RAIZ
+                            TMetadados* meta = le_arq_metadados(nome_arquivo_metadados);
+                            meta->pont_raiz = noInternoPai->p[controle];
+                            salva_arq_metadados(nome_arquivo_metadados, meta);
+
+                        }
+
+                        // PASSA AS CHAVES E SEUS PONTEIROS DO PRÓXIMO NÓ PARA O NÓ INTERNO ATUAL
+                        for(int i = 0; i < noInternoProx->m; i++) {
+
+                            // ATUALIZA O PONTEIRO PARA O PAI
+                            if(noInternoProx->aponta_folha == 1) {
+                                fseek(arq_dados, noInternoProx->p[i+1], SEEK_SET);
+                                TNoFolha* noFolhaAux = le_no_folha(d, arq_dados);
+
+                                noFolhaAux->pont_pai = noFolha->pont_pai;
+
+                                fseek(arq_dados,noInternoProx->p[i+1], SEEK_SET);
+                                salva_no_folha(d, noFolhaAux, arq_dados);
+                                libera_no_folha(d, noFolhaAux);
+                            }
+                            else if (noInternoProx->aponta_folha == 0) {
+                                fseek(arq_indice, noInternoProx->p[i+1], SEEK_SET);
+                                TNoInterno* noInternoAux = le_no_interno(d, arq_indice);
+
+                                noInternoAux->pont_pai = noInternoPai->p[controle];
+
+                                fseek(arq_indice,noInternoProx->p[i+1], SEEK_SET);
+                                salva_no_interno(d, noInternoAux, arq_indice);
+                                libera_no_interno(noInternoAux);
+                            }
+
+                            noInterno->p[noInterno->m+1] = noInternoProx->p[i+1];
+                            noInterno->chaves[noInterno->m] = noInternoProx->chaves[i];
+                            noInterno->m++;
+                        }
+
+                    }
+
+                }
+
                 // ATUALIZA O PONTEIRO DO NÓ FOLHA
                 noFolha->pont_prox = noFolhaProx->pont_prox;
 
