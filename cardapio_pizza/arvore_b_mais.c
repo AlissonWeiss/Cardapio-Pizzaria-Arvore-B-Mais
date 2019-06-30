@@ -76,6 +76,9 @@ int insere(int cod, char *nome, char *categoria, float preco, char *nome_arquivo
     FILE * arq_metadados = fopen(nome_arquivo_metadados, "rb+");
 
 
+    printf("\n---\n");
+    printf("TENTANDO INSERIR: %d\n", cod);
+
     //LÊ ARQUIVO DE METADADOS
     TMetadados * metadados = le_arq_metadados(nome_arquivo_metadados);
 
@@ -492,6 +495,17 @@ int insere(int cod, char *nome, char *categoria, float preco, char *nome_arquivo
                         salva_no_folha(d, aux, arq_dados);
 
                     }
+                    else{
+                        fseek(arq_indice, noInterno->p[i], SEEK_SET);
+                        TNoInterno * aux_interno = le_no_interno(d, arq_indice);
+
+                        //ATUALIZA PONTEIRO DO PAI DO NO INTERNO
+                        aux_interno->pont_pai = metadados->pont_prox_no_interno_livre;
+                        fseek(arq_indice, noInterno->p[i], SEEK_SET);
+                        salva_no_interno(d, aux_interno, arq_indice);
+
+                        //free(aux_interno);
+                    }
                 }
                 for (int i = 0; i < novoNoInterno->m + 1; i++){
                     if (novoNoInterno->aponta_folha){
@@ -502,6 +516,18 @@ int insere(int cod, char *nome, char *categoria, float preco, char *nome_arquivo
                         salva_no_folha(d, aux, arq_dados);
 
                     }
+                    else{
+                        fseek(arq_indice, novoNoInterno->p[i], SEEK_SET);
+                        TNoInterno * aux_interno = le_no_interno(d, arq_indice);
+
+                        //ATUALIZA PONTEIRO DO PAI DO NO INTERNO
+                        aux_interno->pont_pai = metadados->pont_prox_no_interno_livre;
+                        fseek(arq_indice, novoNoInterno->p[i], SEEK_SET);
+                        salva_no_interno(d, aux_interno, arq_indice);
+
+                        //free(aux_interno);
+                    }
+
                 }
 
                 fclose(arq_indice);
@@ -525,6 +551,8 @@ int exclui(int cod, char *nome_arquivo_metadados, char *nome_arquivo_indice, cha
     FILE * arq_metadados = fopen(nome_arquivo_metadados, "rb+");
     FILE * arq_indice = fopen(nome_arquivo_indice, "rb+");
     FILE * arq_dados = fopen(nome_arquivo_dados, "rb+");
+
+    printf("TENTANDO EXCLUIR: %d\n", cod);
 
     int var_busca = busca(cod, nome_arquivo_metadados, nome_arquivo_indice, nome_arquivo_dados, d);
 

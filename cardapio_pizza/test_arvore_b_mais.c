@@ -1097,6 +1097,7 @@ BEGIN_TESTS();
         ASSERT_EQUAL_CMP(D, tabDados, tabDadosSaida, cmp_nos_folhas);
         libera_nos_folhas(D, tabDados);
         libera_nos_folhas(D, tabDadosSaida);
+        printf("FIM TESTE 19\n");
     }
     //TESTE 20
     TEST("Carga de Dados Inicial 3, 50 registros, 11 nohs internos, 24 folhas");
@@ -1110,6 +1111,13 @@ BEGIN_TESTS();
                                              24 * tamanho_no_folha(D));
         TMetadados *tabMetadadosSaida = le_arq_metadados(NOME_ARQUIVO_METADADOS);
         ASSERT_EQUAL_CMP(D, tabMetadados, tabMetadadosSaida, cmp_metadados);
+
+        printf("\nTABELA METADADOS\n");
+        imprime_metadados(tabMetadadosSaida);
+        printf("\nTABELA METADADOS ESPERADO\n");
+        imprime_metadados(tabMetadados);
+        printf("\n");
+
         free(tabMetadados);
         free(tabMetadadosSaida);
 
@@ -1209,6 +1217,10 @@ BEGIN_TESTS();
 
         TListaNosInternos *tabIndiceSaida = le_nos_internos(D, NOME_ARQUIVO_INDICE);
         ASSERT_EQUAL_CMP(D, tabIndice, tabIndiceSaida, cmp_nos_internos);
+        printf("TABELA INDICES\n");
+        imprime_nos_internos(D, tabIndiceSaida);
+        printf("TABELA INDICES ESPERADA\n");
+        imprime_nos_internos(D, tabIndice);
         libera_nos_internos(tabIndice);
         libera_nos_internos(tabIndiceSaida);
 
