@@ -447,6 +447,7 @@ int insere(int cod, char *nome, char *categoria, float preco, char *nome_arquivo
 
                 paiNoInterno->pont_pai = noInterno->pont_pai;
                 paiNoInterno->p[0] = noFolha->pont_pai;
+                int ponteiro_no_interno = noFolha->pont_pai;
 
                 paiNoInterno->chaves[0] = novoNoInterno->chaves[0];
                 paiNoInterno->p[1] = pont_novo_no_interno;
@@ -470,7 +471,7 @@ int insere(int cod, char *nome, char *categoria, float preco, char *nome_arquivo
                 fseek(arq_indice, noInterno->pont_pai, SEEK_SET);
                 salva_no_interno(d, paiNoInterno, arq_indice);
 
-                fseek(arq_indice, paiNoInterno->p[0], SEEK_SET);
+                fseek(arq_indice, ponteiro_no_interno, SEEK_SET);
                 salva_no_interno(d, noInterno, arq_indice);
 
                 fseek(arq_indice, pont_novo_no_interno, SEEK_SET);
@@ -479,11 +480,29 @@ int insere(int cod, char *nome, char *categoria, float preco, char *nome_arquivo
                 fseek(arq_dados, var_busca, SEEK_SET);
                 salva_no_folha(d, noFolha, arq_dados);
 
-                novoNo->pont_pai = 0;
-                printf("NOVO NO: %d\n", novoNo->pont_pai);
-                printf("NOVO NO: %d\n", novoNo->pizzas[0]->cod);
                 fseek(arq_dados, noFolha->pont_prox, SEEK_SET);
                 salva_no_folha(d, novoNo, arq_dados);
+
+                for (int i = 0; i < noInterno->m + 1; i++){
+                    if (noInterno->aponta_folha){
+                        fseek(arq_dados, noInterno->p[i], SEEK_SET);
+                        TNoFolha * aux = le_no_folha(d, arq_dados);
+                        aux->pont_pai = paiNoInterno->p[0];
+                        fseek(arq_dados, noInterno->p[i], SEEK_SET);
+                        salva_no_folha(d, aux, arq_dados);
+
+                    }
+                }
+                for (int i = 0; i < novoNoInterno->m + 1; i++){
+                    if (novoNoInterno->aponta_folha){
+                        fseek(arq_dados, novoNoInterno->p[i], SEEK_SET);
+                        TNoFolha * aux = le_no_folha(d, arq_dados);
+                        aux->pont_pai = pont_novo_no_interno;
+                        fseek(arq_dados, novoNoInterno->p[i], SEEK_SET);
+                        salva_no_folha(d, aux, arq_dados);
+
+                    }
+                }
 
                 fclose(arq_indice);
                 fclose(arq_dados);
@@ -491,6 +510,7 @@ int insere(int cod, char *nome, char *categoria, float preco, char *nome_arquivo
                 return noFolha->pont_prox;
 
             }
+
         }
     }
 
