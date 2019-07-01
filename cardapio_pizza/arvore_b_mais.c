@@ -863,13 +863,15 @@ void carrega_dados(int d, char *nome_arquivo_entrada, char *nome_arquivo_metadad
     fclose(arq_entrada);
 }
 
-TPizza** busca_por_categoria(int d, char *nome_arquivo_dados, char *categoria) {
+TPizza** busca_por_categoria(int d, char *nome_arquivo_dados, char *nome_arquivo_indices, char* nome_arquivo_metadados, char *categoria) {
 
     // LÊ O ARQUIVO
     FILE *arq_dados = fopen(nome_arquivo_dados, "rb");
 
     // INICIALIZA AS VARIÁVEIS
-    fseek(arq_dados, 0, SEEK_SET);
+    // PONTEIRO PARA O PRIMEIRO NÓ FOLHA (NÓ QUE POSSUI O MENOR CÓDIGO)
+    int prim_folha = busca(0, nome_arquivo_metadados, nome_arquivo_indices, nome_arquivo_dados, d);
+    fseek(arq_dados, prim_folha, SEEK_SET);
     TNoFolha* noFolha = le_no_folha(d, arq_dados);
 
     int tam = 128;
@@ -893,6 +895,9 @@ TPizza** busca_por_categoria(int d, char *nome_arquivo_dados, char *categoria) {
         noFolha = le_no_folha(d, arq_dados);
 
     }
+
+    fclose(arq_dados);
+    libera_no_folha(d, noFolha);
 
     return resultado;
 }
