@@ -887,3 +887,68 @@ void carrega_dados(int d, char *nome_arquivo_entrada, char *nome_arquivo_metadad
     //FECHA ARQUIVO DE ENTRADA
     fclose(arq_entrada);
 }
+
+TPizza** busca_por_categoria(int d, char *nome_arquivo_dados, char *categoria) {
+
+    // LÊ O ARQUIVO
+    FILE *arq_dados = fopen(nome_arquivo_dados, "rb");
+
+    // INICIALIZA AS VARIÁVEIS
+    fseek(arq_dados, 0, SEEK_SET);
+    TNoFolha* noFolha = le_no_folha(d, arq_dados);
+
+    int tam = 128;
+    int fim_vetor = 0;
+    TPizza* resultado[tam];
+
+    // COMO TODOS OS NÓS FOLHAS ESTÃO ENCADEADOS, PERCORRE DO PRIMEIRO ATÉ O ÚLTIMO PROCURANDO AS PIZZAS
+    while(noFolha->pont_prox != -1) {
+
+        // PERCORRE AS PIZZAS
+        for(int i = 0; i < noFolha->m; i++) {
+            // CHECA SE É A CATEGORIA CERTA E, SE FOR, COPIA PARA O VETOR DE RESULTADO
+            if (strcmp(categoria, noFolha->pizzas[i]->categoria)) {
+                resultado[fim_vetor] = noFolha->pizzas[i];
+                fim_vetor++;
+            }
+        }
+
+        // LÊ O PRÓXIMO NÓ FOLHA
+        fseek(arq_dados, noFolha->pont_prox, SEEK_SET);
+        noFolha = le_no_folha(d, arq_dados);
+
+    }
+
+    return resultado;
+}
+
+void remove_por_categoria(int d, char *nome_arquivo_dados, char *nome_arquivo_indices, char *nome_arquivo_metadados, char *categoria) {
+
+    // ABRE OS ARQUIVOS
+    FILE *arq_dados = fopen(nome_arquivo_dados, "rb");
+
+    // INICIALIZA VARIÁVEIS
+    // POSIÇÃO DO PRIMEIRO NÓ FOLHA (NÓ QUE POSSUI O MENOR CÓDIGO)
+    int prim_folha = busca(0, nome_arquivo_metadados, nome_arquivo_indices, nome_arquivo_dados, d);
+
+    fseek(arq_dados, prim_folha, SEEK_SET);
+    TNoFolha* noFolha = le_no_folha(d, arq_dados);
+
+    // PERCORRE OS NÓS FOLHAS
+    while(noFolha->pont_prox != -1) {
+
+        // PERCORRE AS PIZZAS DO NÓ FOLHA PROCURANDO AS QUE TEM A CATEGORIA A SER REMOVIDA
+        for(int i = 0; i < noFolha->m; i++) {
+            if (strcmp(noFolha->pizzas[i]->categoria))
+                exclui(noFolha->pizzas[i]->cod, nome_arquivo_metadados, nome_arquivo_indices, nome_arquivo_dados, d);
+        }
+
+        fseek(arq_dados, noFolha->pont_prox, SEEK_SET);
+        noFolha = le_no_folha(d, arq_dados);
+
+    }
+
+    // FECHA O ARQUIVO DE DADOS E LIBERA O NÓ FOLHA
+    fclose(arq_dados);
+    libera_no_folha(d, noFolha);
+}
