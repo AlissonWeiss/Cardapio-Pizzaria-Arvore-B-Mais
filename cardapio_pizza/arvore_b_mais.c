@@ -11,6 +11,13 @@
 #include "no_interno.h"
 #include "no_folha.h"
 #include <string.h>
+#include <locale.h>
+
+#define NOME_ARQUIVO_METADADOS "metadados.dat"
+#define NOME_ARQUIVO_INDICE "indice.dat"
+#define NOME_ARQUIVO_DADOS "pizzas.dat"
+#define NOME_ARQUIVO_INICIAL "dados_iniciais.dat"
+#define D 2
 
 int busca(int cod, char *nome_arquivo_metadados, char *nome_arquivo_indice, char *nome_arquivo_dados, int d){
 
@@ -939,7 +946,7 @@ void remove_por_categoria(int d, char *nome_arquivo_dados, char *nome_arquivo_in
 
         // PERCORRE AS PIZZAS DO NÓ FOLHA PROCURANDO AS QUE TEM A CATEGORIA A SER REMOVIDA
         for(int i = 0; i < noFolha->m; i++) {
-            if (strcmp(noFolha->pizzas[i]->categoria))
+            if (strcmp(noFolha->pizzas[i]->categoria, categoria))
                 exclui(noFolha->pizzas[i]->cod, nome_arquivo_metadados, nome_arquivo_indices, nome_arquivo_dados, d);
         }
 
@@ -951,4 +958,83 @@ void remove_por_categoria(int d, char *nome_arquivo_dados, char *nome_arquivo_in
     // FECHA O ARQUIVO DE DADOS E LIBERA O NÓ FOLHA
     fclose(arq_dados);
     libera_no_folha(d, noFolha);
+}
+
+void apresentarOpcoes(){
+
+    printf("***********************\n");
+    printf("(1) - Adicionar Pizza\n");
+    printf("(2) - Excluir Pizza\n");
+    printf("(3) - Buscar Pizza\n");
+    printf("(4) - Alterar Pizza\n");
+    printf("(5) - Buscar Pizza por categoria\n");
+    printf("(6) - Remover Pizzas da categoria\n");
+    printf("(7) - Sair\n");
+    printf("**************************\n");
+
+}
+
+int main(){
+
+    setlocale(LC_ALL, "Portuguese");
+    int opcao = -1;
+    while(1){
+
+        apresentarOpcoes();
+
+        printf("Qual a opcao desejada: ");
+        scanf("%d", &opcao);
+
+        //inserir
+        if (opcao == 1){
+            int cod;
+            char nome[50];
+            char categoria[20];
+            double preco;
+            printf("Digite o codigo da pizza: ");
+            scanf("%d", &cod);
+            printf("Digite o Nome da pizza: ");
+            scanf("%s", &nome);
+            printf("Digite a Categoria da pizza: ");
+            scanf("%s", &categoria);
+            printf("Digite o preco da pizza: ");
+            scanf("%lf", &preco);
+
+            TPizza * p = pizza(cod, nome, categoria, preco);
+            int aux = insere(p->cod,p->nome, p->categoria, p->preco, NOME_ARQUIVO_METADADOS, NOME_ARQUIVO_INDICE, NOME_ARQUIVO_DADOS, D);
+
+            if (aux != -1){
+                printf("PIZZA INSERIDA COM SUCESSO!\n");
+            }
+            else{
+                printf("ERRO AO INSERIR PIZZA!\n");
+            }
+
+        }
+        else if (opcao == 2){
+
+        }
+        else if (opcao == 3){
+
+        }
+        else if (opcao == 4){
+
+        }
+        else if (opcao == 5){
+
+        }
+        else if (opcao == 6){
+
+        }
+        else if (opcao == 7){
+            printf("VOCE ESCOLHEU SAIR\n");
+            break;
+        }
+        else{
+            printf("Opcao invalida!\n");
+        }
+
+    }
+
+    return 0;
 }
