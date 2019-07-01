@@ -939,7 +939,7 @@ void remove_por_categoria(int d, char *nome_arquivo_dados, char *nome_arquivo_in
 
         // PERCORRE AS PIZZAS DO NÓ FOLHA PROCURANDO AS QUE TEM A CATEGORIA A SER REMOVIDA
         for(int i = 0; i < noFolha->m; i++) {
-            if (strcmp(noFolha->pizzas[i]->categoria))
+            if (strcmp(noFolha->pizzas[i]->categoria, categoria));
                 exclui(noFolha->pizzas[i]->cod, nome_arquivo_metadados, nome_arquivo_indices, nome_arquivo_dados, d);
         }
 
@@ -951,4 +951,40 @@ void remove_por_categoria(int d, char *nome_arquivo_dados, char *nome_arquivo_in
     // FECHA O ARQUIVO DE DADOS E LIBERA O NÓ FOLHA
     fclose(arq_dados);
     libera_no_folha(d, noFolha);
+}
+
+// ALTERA A PIZZA, RETORNA -1 SE ELA NÃO ESTÁ NA ÁRVORE
+int altera_pizza(int cod, char *novo_nome, char *nova_categoria, float novo_preco, char *nome_arquivo_metadados, char *nome_arquivo_indice, char *nome_arquivo_dados, int d) {
+
+    // ABRE O ARQUIVO
+    FILE *arq_dados = fopen(nome_arquivo_dados, "rb+");
+
+    // CHECA SE A PIZZA ESTÁ NA ÁRVORE
+    int var_busca = busca(cod, nome_arquivo_metadados, nome_arquivo_indice, nome_arquivo_dados, d);
+
+    if (var_busca == -1) return var_busca; // PIZZA NÃO FOI ACHADA
+    else {
+        // LÊ NÓ FOLHA
+        fseek(arq_dados, var_busca, SEEK_SET);
+        TNoFolha* noFolha = le_no_folha(d, arq_dados);
+
+        for (int i = 0; i < noFolha->m; i++) {
+            if (noFolha->pizzas[i]->cod == cod) {
+                strcpy(noFolha->pizzas[i]->categoria, nova_categoria);
+                strcpy(noFolha->pizzas[i]->nome, novo_nome);
+                noFolha->pizzas[i]->preco = novo_preco;
+
+                break;
+            }
+        }
+
+        // SALVA NÓ FOLHA
+        fseek(arq_dados, var_busca, SEEK_SET);
+        salva_no_folha(d, noFolha, arq_dados);
+
+        fclose(arq_dados);
+        libera_no_folha(d, noFolha);
+
+        return var_busca;
+    }
 }
