@@ -253,8 +253,10 @@ int insere(int cod, char *nome, char *categoria, float preco, char *nome_arquivo
             //O ESPAÇO PARA O NOVO PONTEIRO FICA NO LUGAR ONDE O -2 FOI INSERIDO
             for(int i = 0; i < noInterno->m; i++){
 
+                //VERIFICA SE A CHAVE É MENOR QUE NO INDICE ATUAL DO NÓ INTERNO
                 if(noInterno->chaves[i] > chave){
 
+                    //CASO NÃO TENHA ALTERADO AINDA, ALTERA E TROCA VARIÁVEL DE CONTROLE
                     if(control == 0){
                         aux_pont = noInterno->p[i + 1];
                         noInterno->p[i + 1] = -2;
@@ -316,120 +318,125 @@ int insere(int cod, char *nome, char *categoria, float preco, char *nome_arquivo
                 }
             }
 
-            //FLAG DO LOOP
-            int flag_loop = 0;
+            //ATUALIZAR ARQUIVO METADADOS E SALVA
+            metadados->pont_prox_no_folha_livre = metadados->pont_prox_no_folha_livre + tamanho_no_folha(d);
+            salva_metadados(metadados, arq_metadados);
 
-            //ATUALIZAR ARQUIVO METADADOS
-            metadados->pont_prox_no_folha_livre = noFolha->pont_prox + tamanho_no_folha(d);
+            //VARIÁVEL PARA CONTROLE DO LOOP
+            int loop_control = 0;
 
-            //CASO O NO INTERNO ESTEJA CHEIO, PARTICIONA
-            if(noInterno->m > 2 * d){
+            //VERIFICA SE O NÓ INTERNO ESTÁ CHEIO
+            if(noInterno->m > (2 * d)){
+                int pont_noInterno = noFolha->pont_pai;
+                int chave_aux;
 
-                int pont_noInterno = noFolha->pont_pai;    int loop = 0;
-                int ref_pai = -1;
-
-                TNoInterno * novo_noInterno;
+                //INICIALIZA NOVO NÓ E POSSÍVEL NÓ A SER UTILIZADO
+                TNoInterno * novoNoInterno;
                 TNoInterno * pai_noInterno;
 
-                while(loop == 0){
+                while(loop_control == 0){
 
-                    ref_pai = noInterno->chaves[d];
+                    //PEGA A CHAVE DO MEIO DO NÓ INTERNO
+                    chave_aux = noInterno->chaves[d];
 
                     //CRIA UM NOVO NO VAZIO
-                    novo_noInterno = no_interno_vazio(d);
+                    novoNoInterno = no_interno_vazio(d);
 
-                    //CASO NAO TENHA NO PAI, CRIA UM
+                    //VERIFICA SE NÓ INTERNO NÃO TEM PAI, CASO NÃO TENHA, CRIA UM
                     if(noInterno->pont_pai == -1){
                         pai_noInterno = no_interno_vazio(d);
-                        loop = 1;
+                        loop_control = 1;
                     }
                     else{
-                        //RECEBE O PAI
+                        //CASO CONTRÁRIO, POSICIONA O CURSOR E LÊ O PAI
                         fseek(arq_indice, noInterno->pont_pai, SEEK_SET);
                         pai_noInterno = le_no_interno(d, arq_indice);
                     }
 
-                    //TRANSFERE OS PONTEIROS PARA O NOVO NO INTERNO E ATUALIZA O NO INTERNO
-                    for(int i = d + 1; i <= noInterno->m; i++){
+                    //TRANSFERE OS PONTEIROS PARA O NOVO NÓ INTERNO E ATUALIZA O NÓ INTERNO
+                    //PERCORRE ATÉ M + 1 POIS SÃO M + 1 PONTEIROS
+                    for(int i = d + 1; i < noInterno->m + 1; i++){
 
-                        novo_noInterno->p[i - d - 1] = noInterno->p[i];
+                        novoNoInterno->p[i - d - 1] = noInterno->p[i];
                         noInterno->p[i] = -1;
-                        if(noInterno->aponta_folha == 0 && i < noInterno->m){
-                            novo_noInterno->chaves[i - d - 1] = noInterno->chaves[i];
-                        }
-                        noInterno->chaves[i - 1] = -1;
-                        novo_noInterno->m = novo_noInterno->m + 1;
-                    }
 
+                        if(noInterno->aponta_folha == 0 && i < noInterno->m)
+                            novoNoInterno->chaves[i - d - 1] = noInterno->chaves[i];
+
+                        noInterno->chaves[i - 1] = -1;
+                        novoNoInterno->m = novoNoInterno->m + 1;
+                    }
                     noInterno->m = d;
 
-                    //COMO O M FOI ESTABELECIDO COM PONTEIROS E SEMPRE TEM M+1 P
-                    novo_noInterno->m = novo_noInterno->m - 1;
-                    novo_noInterno->aponta_folha = noInterno->aponta_folha;
+                    //CONSERTA M DO NÓ INTERNO E O APONTA FOLHA
+                    novoNoInterno->m--;
+                    novoNoInterno->aponta_folha = noInterno->aponta_folha;
 
-                    //ATUALIZA AS CHAVES DO NOVO NO INTERNO
-                    for(int i = 0; i < novo_noInterno->m; i++){
+                    //ATUALIZA AS CHAVES DO NOVO NÓ INTERNO
+                    for(int i = 0; i < novoNoInterno->m; i++){
 
-                        if(novo_noInterno->aponta_folha == 1){
-                            fseek(arq_dados, novo_noInterno->p[i + 1], SEEK_SET);
+                        if(novoNoInterno->aponta_folha == 1){
+
+                            fseek(arq_dados, novoNoInterno->p[i + 1], SEEK_SET);
                             TNoFolha * aux_folha = le_no_folha(d, arq_dados);
-                            novo_noInterno->chaves[i] = aux_folha->pizzas[0]->cod;
+                            novoNoInterno->chaves[i] = aux_folha->pizzas[0]->cod;
+
                         }
                     }
 
-                    //ATUALIZA OS PONTEIROS PAI DOS NO FOLHAS/INTERNOS
-                    for(int i = 0; i < novo_noInterno->m + 1; i++){
+                    //ATUALIZA OS PONTEIROS PARA O PAI DOS NÓS FOLHAS E/OU INTERNOS
+                    for(int i = 0; i < novoNoInterno->m + 1; i++){
 
-                        if(novo_noInterno->aponta_folha == 1){
-                            fseek(arq_dados, novo_noInterno->p[i], SEEK_SET);
+                        if(novoNoInterno->aponta_folha == 1){
+                            fseek(arq_dados, novoNoInterno->p[i], SEEK_SET);
                             TNoFolha * aux_folha = le_no_folha(d, arq_dados);
-
-                            //ATUALIZA PONTEIRO DO PAI DA FOLHA
                             aux_folha->pont_pai = metadados->pont_prox_no_interno_livre;
-                            fseek(arq_dados, novo_noInterno->p[i], SEEK_SET);
+                            fseek(arq_dados, novoNoInterno->p[i], SEEK_SET);
                             salva_no_folha(d, aux_folha, arq_dados);
 
-                            //free(aux_folha);
                         }
                         else{
-                            fseek(arq_indice, novo_noInterno->p[i], SEEK_SET);
+                            fseek(arq_indice, novoNoInterno->p[i], SEEK_SET);
                             TNoInterno * aux_interno = le_no_interno(d, arq_indice);
-
-                            //ATUALIZA PONTEIRO DO PAI DO NO INTERNO
                             aux_interno->pont_pai = metadados->pont_prox_no_interno_livre;
-                            fseek(arq_indice, novo_noInterno->p[i], SEEK_SET);
+                            fseek(arq_indice, novoNoInterno->p[i], SEEK_SET);
                             salva_no_interno(d, aux_interno, arq_indice);
 
-                            //free(aux_interno);
                         }
                     }
-                    //O PAI É UM NOVO NO
-                    if(loop == 1){
+                    //VERIFICA SE O PAI É UM NOVO NÓ INTERNO
+                    if(loop_control == 1){
 
+                        //CASO SEJA, ADICIONA OS PONTEIROS, A CHAVE E INCREMENTA M
                         pai_noInterno->p[0] = pont_noInterno;
                         pai_noInterno->p[1] = metadados->pont_prox_no_interno_livre;
-                        pai_noInterno->chaves[0] = ref_pai;  //novo_noInterno->chaves[0];
+                        pai_noInterno->chaves[0] = chave_aux;
                         pai_noInterno->m = 1;
 
-                        novo_noInterno->pont_pai = metadados->pont_prox_no_interno_livre + tamanho_no_interno(d);
+                        //ATUALIZA O PONTEIRO DO PAI DO NOVO NÓ INTERNO E O SALVA
+                        novoNoInterno->pont_pai = metadados->pont_prox_no_interno_livre + tamanho_no_interno(d);
                         fseek(arq_indice, metadados->pont_prox_no_interno_livre, SEEK_SET);
-                        salva_no_interno(d, novo_noInterno, arq_indice);
+                        salva_no_interno(d, novoNoInterno, arq_indice);
 
+                        //ATUALIZA O PONTEIRO DO PAI DO NÓ INTERNO E O SALVA
                         noInterno->pont_pai = metadados->pont_prox_no_interno_livre + tamanho_no_interno(d);
                         fseek(arq_indice, pont_noInterno, SEEK_SET);
                         salva_no_interno(d, noInterno, arq_indice);
 
+                        //SALVA PAI DO NÓ INTERNO
                         fseek(arq_indice, metadados->pont_prox_no_interno_livre + tamanho_no_interno(d), SEEK_SET);
                         salva_no_interno(d, pai_noInterno, arq_indice);
 
+                        //ATUALIZA METADADOS E SALVA
                         metadados->pont_raiz = metadados->pont_prox_no_interno_livre + tamanho_no_interno(d);
                         metadados->pont_prox_no_interno_livre = metadados->pont_prox_no_interno_livre + (2*tamanho_no_interno(d));
-
                         salva_arq_metadados(nome_arquivo_metadados, metadados);
                     }
+                    //CASO O PAI NÃO SEJA UM NOVO NÓ INTERNO
                     else{
                         int aux_pos = -2;
 
+                        //PROCURA INDICE A SER ADICIONADO A CHAVE
                         for(int i = 0; i < pai_noInterno->m; i++){
                             if(pai_noInterno->chaves[i] > noInterno->chaves[0]){
                                 aux_pos = i;
@@ -437,6 +444,7 @@ int insere(int cod, char *nome, char *categoria, float preco, char *nome_arquivo
                             }
                         }
 
+                        //VERIFICA SE ENCONTROU O INDICE
                         if(aux_pos != -2){
 
                             for(int i = pai_noInterno->m - 1; i > aux_pos; i++){
@@ -445,35 +453,38 @@ int insere(int cod, char *nome, char *categoria, float preco, char *nome_arquivo
                             }
 
                             pai_noInterno->p[aux_pos + 1] = metadados->pont_prox_no_interno_livre;
-                            pai_noInterno->chaves[aux_pos] = ref_pai;
+                            pai_noInterno->chaves[aux_pos] = chave_aux;
 
                         }
-                            //O NO INTERNO É A ULTIMA CHAVE, LOGO É ´SO ADICIONAR NO FINAL
+                        //CASO CONTRÁRIO, ADICIONA NO FINAL E INCREMENTA M
                         else{
-                            pai_noInterno->chaves[pai_noInterno->m] = ref_pai;
+                            pai_noInterno->chaves[pai_noInterno->m] = chave_aux;
                             pai_noInterno->p[pai_noInterno->m + 1] = metadados->pont_prox_no_interno_livre;
-                            pai_noInterno->m = pai_noInterno->m + 1;
+                            pai_noInterno->m++;
                         }
 
-                        novo_noInterno->pont_pai = noInterno->pont_pai;
+                        //AJUSTA PAI DO NOVO NÓ INTERNO E SALVA-O
+                        novoNoInterno->pont_pai = noInterno->pont_pai;
                         fseek(arq_indice, metadados->pont_prox_no_interno_livre, SEEK_SET);
-                        salva_no_interno(d, novo_noInterno, arq_indice);
+                        salva_no_interno(d, novoNoInterno, arq_indice);
 
+                        //SALVA NÓ INTERNO
                         fseek(arq_indice, pont_noInterno, SEEK_SET);
                         salva_no_interno(d, noInterno, arq_indice);
 
-                        fseek(arq_indice, novo_noInterno->pont_pai, SEEK_SET);
+                        //SALVA O PAI DE NÓ INTERNO
+                        fseek(arq_indice, noInterno->pont_pai, SEEK_SET);
                         salva_no_interno(d, pai_noInterno, arq_indice);
 
+                        //ATUALIZA METADADOS
                         metadados->pont_prox_no_interno_livre = metadados->pont_prox_no_interno_livre + tamanho_no_interno(d);
 
-                        if(pai_noInterno->m <= 2*d){
-                            loop = 1;
+                        //VERIFICA SE O PAI DO NÓ INTERNO ESTÁ OK
+                        if(pai_noInterno->m <= (2 * d)){
+                            loop_control = 1;
                         }
-                            //RECOMEÇA O LOOP
+                        //CASO NÃO ESTEJA, VOLTA PRO LOOP
                         else{
-                            flag_loop = 1;
-
                             pont_noInterno = noInterno->pont_pai;
                             noInterno = pai_noInterno;
                         }
@@ -486,18 +497,18 @@ int insere(int cod, char *nome, char *categoria, float preco, char *nome_arquivo
                 salva_no_interno(d, noInterno, arq_indice);
             }
 
+            //FECHA ARQUIVOS
             fclose(arq_indice);
             fclose(arq_dados);
 
-            if(flag_loop == 0){
-                //FECHA ARQUIVO DE METADADOS
-                salva_arq_metadados(nome_arquivo_metadados, metadados);
-            }
+            salva_arq_metadados(nome_arquivo_metadados, metadados);
 
             return var_retorno;
         }
+        //CASO NÃO SEJA RAIZ
         else{
 
+            //LÊ NÓ INTERNO E AJUSTA PONTEIROS E CHAVES
             TNoInterno * noInterno = no_interno_vazio(d);
             noInterno->p[0] = var_busca;
             noInterno->p[1] = metadados->pont_prox_no_folha_livre;
@@ -505,35 +516,38 @@ int insere(int cod, char *nome, char *categoria, float preco, char *nome_arquivo
             noInterno->m = 1;
             noInterno->aponta_folha = 1;
 
+            //SALVA NÓ INTERNO
             fseek(arq_indice, 0, SEEK_SET);
             salva_no_interno(d, noInterno, arq_indice);
             free(noInterno);
 
-            //SALVAR ARQUIVO DE DADOS
+            //CONSERTA PONTEIROS DO NÓ FOLHA
             noFolha->pont_prox = metadados->pont_prox_no_folha_livre;
             noFolha->pont_pai = 0;
 
+            //SALVAR NÓ FOLHA
             fseek(arq_dados, var_busca, SEEK_SET);
             salva_no_folha(d, noFolha, arq_dados);
 
+            //CONSERTA PONTEIROS DO NOVO NÓ E SALVA
             novoNo->pont_pai = 0;
 
             fseek(arq_dados, metadados->pont_prox_no_folha_livre, SEEK_SET);
             salva_no_folha(d, novoNo, arq_dados);
 
+            //FECHA ARQUIVOS
             fclose(arq_dados);
             fclose(arq_indice);
 
-            free(noFolha);
-            free(novoNo);
-
+            //AJUSTA OS METADADOS
             metadados->pont_raiz = 0;
             metadados->raiz_folha = 0;
             metadados->pont_prox_no_interno_livre = tamanho_no_interno(d);
             metadados->pont_prox_no_folha_livre = metadados->pont_prox_no_folha_livre + tamanho_no_folha(d);
 
-            salva_arq_metadados(nome_arquivo_metadados, metadados);
-            free(metadados);
+            salva_metadados(metadados, arq_metadados);
+
+            fclose(arq_metadados);
 
             return var_retorno;
         }
