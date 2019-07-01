@@ -994,147 +994,147 @@ int altera_pizza(int cod, char *novo_nome, char *nova_categoria, float novo_prec
         return var_busca;
     }
 }
-
-void apresentarOpcoes(){
-
-    printf("***********************\n");
-    printf("(1) - Adicionar Pizza\n");
-    printf("(2) - Excluir Pizza\n");
-    printf("(3) - Buscar Pizza\n");
-    printf("(4) - Alterar Pizza\n");
-    printf("(5) - Buscar Pizza por categoria\n");
-    printf("(6) - Remover Pizzas da categoria\n");
-    printf("(7) - Sair\n");
-    printf("**************************\n");
-
-}
-
-int main(){
-
-    setlocale(LC_ALL, "Portuguese");
-    int opcao = -1;
-    while(1){
-
-        apresentarOpcoes();
-
-        printf("Qual a opcao desejada: ");
-        scanf("%d", &opcao);
-
-        //inserir
-        if (opcao == 1){
-            int cod;
-            char nome[50];
-            char categoria[20];
-            double preco;
-            printf("Digite o codigo da pizza: ");
-            scanf("%d", &cod);
-            printf("Digite o Nome da pizza: ");
-            scanf("%s", &nome);
-            printf("Digite a Categoria da pizza: ");
-            scanf("%s", &categoria);
-            printf("Digite o preco da pizza: ");
-            scanf("%lf", &preco);
-
-            TPizza * p = pizza(cod, nome, categoria, preco);
-            int aux = insere(p->cod,p->nome, p->categoria, p->preco, NOME_ARQUIVO_METADADOS, NOME_ARQUIVO_INDICE, NOME_ARQUIVO_DADOS, D);
-
-            if (aux != -1){
-                printf("PIZZA INSERIDA COM SUCESSO!\n");
-            }
-            else{
-                printf("ERRO AO INSERIR PIZZA!\n");
-            }
-
-        }
-        else if (opcao == 2){
-
-            int cod;
-            printf("Digite o codigo da pizza a ser removida: ");
-            scanf("%d", &cod);
-            int aux = exclui(cod, NOME_ARQUIVO_METADADOS, NOME_ARQUIVO_INDICE, NOME_ARQUIVO_DADOS, D);
-
-            if (aux != -1){
-                printf("Exclusao efetuada com sucesso!\n");
-            }
-            else{
-                printf("Nao foi possivel concluir a exclusao!\n");
-            }
-
-        }
-
-        else if (opcao == 3){
-
-            int cod;
-
-            printf("Digite o codigo da pizza a ser buscada: ");
-            scanf("%d", &cod);
-
-            int aux = busca(cod, NOME_ARQUIVO_METADADOS, NOME_ARQUIVO_INDICE, NOME_ARQUIVO_DADOS, D);
-
-            if (aux != -1){
-                printf("Pizza foi encontrada!\n");
-            }
-            else{
-                printf("Erro ao buscar pizza!\n");
-            }
-
-        }
-        else if (opcao == 4){
-
-            int cod;
-            char nome[50];
-            char categoria[20];
-            double preco;
-
-            printf("Digite o codigo da pizza a ser alterada: ");
-            scanf("%d", &cod);
-            printf("Digite o Novo Nome da pizza: ");
-            scanf("%s", &nome);
-            printf("Digite a Nova Categoria da pizza: ");
-            scanf("%s", &categoria);
-            printf("Digite o Novo Preco da pizza: ");
-            scanf("%lf", &preco);
-
-            int aux = altera_pizza(cod, nome, categoria, preco, NOME_ARQUIVO_METADADOS, NOME_ARQUIVO_INDICE, NOME_ARQUIVO_DADOS, D);
-
-            if (aux != -1){
-                printf("Pizza alterada com sucesso!\n");
-
-            }
-            else{
-                printf("Nao foi possivel alterar a pizza!\n");
-            }
-        }
-        else if (opcao == 5){
-            char categoria[20];
-            printf("Digite a categoria que deseja buscar: ");
-            scanf("%s", &categoria);
-            TPizza** lista = busca_por_categoria(D, NOME_ARQUIVO_DADOS, categoria);
-
-            int i = 0;
-            if (lista != NULL) {
-                while (lista[i] != NULL) {
-                    imprime_pizza(lista[i]);
-                    i++;
-                }
-            }
-        }
-        else if (opcao == 6){
-            char categoria[20];
-            printf("Digite a categoria que deseja remover: ");
-            scanf("%s", &categoria);
-            remove_por_categoria(D, NOME_ARQUIVO_METADADOS, NOME_ARQUIVO_INDICE, NOME_ARQUIVO_DADOS, categoria);
-
-        }
-        else if (opcao == 7){
-            printf("VOCE ESCOLHEU SAIR\n");
-            break;
-        }
-        else{
-            printf("Opcao invalida!\n");
-        }
-
-    }
-
-    return 0;
-}
+//
+//void apresentarOpcoes(){
+//
+//    printf("***********************\n");
+//    printf("(1) - Adicionar Pizza\n");
+//    printf("(2) - Excluir Pizza\n");
+//    printf("(3) - Buscar Pizza\n");
+//    printf("(4) - Alterar Pizza\n");
+//    printf("(5) - Buscar Pizza por categoria\n");
+//    printf("(6) - Remover Pizzas da categoria\n");
+//    printf("(7) - Sair\n");
+//    printf("**************************\n");
+//
+//}
+//
+//int main(){
+//
+//    setlocale(LC_ALL, "Portuguese");
+//    int opcao = -1;
+//    while(1){
+//
+//        apresentarOpcoes();
+//
+//        printf("Qual a opcao desejada: ");
+//        scanf("%d", &opcao);
+//
+//        //inserir
+//        if (opcao == 1){
+//            int cod;
+//            char nome[50];
+//            char categoria[20];
+//            double preco;
+//            printf("Digite o codigo da pizza: ");
+//            scanf("%d", &cod);
+//            printf("Digite o Nome da pizza: ");
+//            scanf("%s", &nome);
+//            printf("Digite a Categoria da pizza: ");
+//            scanf("%s", &categoria);
+//            printf("Digite o preco da pizza: ");
+//            scanf("%lf", &preco);
+//
+//            TPizza * p = pizza(cod, nome, categoria, preco);
+//            int aux = insere(p->cod,p->nome, p->categoria, p->preco, NOME_ARQUIVO_METADADOS, NOME_ARQUIVO_INDICE, NOME_ARQUIVO_DADOS, D);
+//
+//            if (aux != -1){
+//                printf("PIZZA INSERIDA COM SUCESSO!\n");
+//            }
+//            else{
+//                printf("ERRO AO INSERIR PIZZA!\n");
+//            }
+//
+//        }
+//        else if (opcao == 2){
+//
+//            int cod;
+//            printf("Digite o codigo da pizza a ser removida: ");
+//            scanf("%d", &cod);
+//            int aux = exclui(cod, NOME_ARQUIVO_METADADOS, NOME_ARQUIVO_INDICE, NOME_ARQUIVO_DADOS, D);
+//
+//            if (aux != -1){
+//                printf("Exclusao efetuada com sucesso!\n");
+//            }
+//            else{
+//                printf("Nao foi possivel concluir a exclusao!\n");
+//            }
+//
+//        }
+//
+//        else if (opcao == 3){
+//
+//            int cod;
+//
+//            printf("Digite o codigo da pizza a ser buscada: ");
+//            scanf("%d", &cod);
+//
+//            int aux = busca(cod, NOME_ARQUIVO_METADADOS, NOME_ARQUIVO_INDICE, NOME_ARQUIVO_DADOS, D);
+//
+//            if (aux != -1){
+//                printf("Pizza foi encontrada!\n");
+//            }
+//            else{
+//                printf("Erro ao buscar pizza!\n");
+//            }
+//
+//        }
+//        else if (opcao == 4){
+//
+//            int cod;
+//            char nome[50];
+//            char categoria[20];
+//            double preco;
+//
+//            printf("Digite o codigo da pizza a ser alterada: ");
+//            scanf("%d", &cod);
+//            printf("Digite o Novo Nome da pizza: ");
+//            scanf("%s", &nome);
+//            printf("Digite a Nova Categoria da pizza: ");
+//            scanf("%s", &categoria);
+//            printf("Digite o Novo Preco da pizza: ");
+//            scanf("%lf", &preco);
+//
+//            int aux = altera_pizza(cod, nome, categoria, preco, NOME_ARQUIVO_METADADOS, NOME_ARQUIVO_INDICE, NOME_ARQUIVO_DADOS, D);
+//
+//            if (aux != -1){
+//                printf("Pizza alterada com sucesso!\n");
+//
+//            }
+//            else{
+//                printf("Nao foi possivel alterar a pizza!\n");
+//            }
+//        }
+//        else if (opcao == 5){
+//            char categoria[20];
+//            printf("Digite a categoria que deseja buscar: ");
+//            scanf("%s", &categoria);
+//            TPizza** lista = busca_por_categoria(D, NOME_ARQUIVO_DADOS, categoria);
+//
+//            int i = 0;
+//            if (lista != NULL) {
+//                while (lista[i] != NULL) {
+//                    imprime_pizza(lista[i]);
+//                    i++;
+//                }
+//            }
+//        }
+//        else if (opcao == 6){
+//            char categoria[20];
+//            printf("Digite a categoria que deseja remover: ");
+//            scanf("%s", &categoria);
+//            remove_por_categoria(D, NOME_ARQUIVO_METADADOS, NOME_ARQUIVO_INDICE, NOME_ARQUIVO_DADOS, categoria);
+//
+//        }
+//        else if (opcao == 7){
+//            printf("VOCE ESCOLHEU SAIR\n");
+//            break;
+//        }
+//        else{
+//            printf("Opcao invalida!\n");
+//        }
+//
+//    }
+//
+//    return 0;
+//}
