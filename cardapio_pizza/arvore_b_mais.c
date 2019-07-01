@@ -745,7 +745,7 @@ int exclui(int cod, char *nome_arquivo_metadados, char *nome_arquivo_indice, cha
                             TMetadados* meta = le_arq_metadados(nome_arquivo_metadados);
                             meta->pont_raiz = noInternoPai->p[controle];
                             salva_arq_metadados(nome_arquivo_metadados, meta);
-
+                            noInterno->pont_pai = -1;
                         }
 
                         // PASSA AS CHAVES E SEUS PONTEIROS DO PRÓXIMO NÓ PARA O NÓ INTERNO ATUAL
