@@ -220,91 +220,97 @@ int insere(int cod, char *nome, char *categoria, float preco, char *nome_arquivo
         //ABRE O ARQUIVO DE METADADOS PARA ATUALIZAR AS REFERENCIAS
         TMetadados *metadados = le_arq_metadados(nome_arquivo_metadados);
 
+        //VARIÁVEL PARA CONTROLAR O QUE RETORNAR
         int var_retorno;
 
+        //CASO NÃO TENHA TROCADO DE NÓ FOLHA
         if(trocou == 0){
             var_retorno = var_busca;
         }
+        //CASO TENHA TROCADO DE NÓ FOLHA
         else{
             var_retorno = metadados->pont_prox_no_folha_livre;
         }
 
+        //VERIFICA SE É RAIZ
         if(metadados->raiz_folha == 0){
 
-            //MODIFICAR O ARQUIVO DE INDICE PARA TER UM PONTEIRO AO novo_noFolha
-            //   lembrete: O NOVO NO FOLHA FICARA NECESSÁRIAMENTE APOS O ANTIGO NO ARQUIVO
-
+            //COLOCA O CURSOR NO PAI DO NÓ FOLHA E LÊ O NÓ INTERNO
             fseek(arq_indice, noFolha->pont_pai, SEEK_SET);
             TNoInterno * noInterno = le_no_interno(d, arq_indice);
+
+            //PEGA A CHAVE QUE SUBIRÁ PARA O PAI
             int chave = novoNo->pizzas[0]->cod;
-            int aux_chave = chave;
+            int aux_chave;
 
-            //CASO O NO INTERNO TENHA ESPAÇO PARA INSERÇÃO
-            //if(noInterno->m < 2*d){
+            //VARIÁVEL DE CONTROLE
+            int control = 0;
 
-            int flag = 0;
-            int aux_pont; int aux_pont_02;
+            //AUXILIARES PARA ARMAZENAR PONTEIROS TEMPORÁRIOS
+            int aux_pont, aux_pont2;
 
-            //ACERTA OS PONTEIROS DO NÓ INTERNO
+            //ACERTA AS CHAVES E PONTEIROS DO NÓ INTERNO
             //O ESPAÇO PARA O NOVO PONTEIRO FICA NO LUGAR ONDE O -2 FOI INSERIDO
             for(int i = 0; i < noInterno->m; i++){
 
                 if(noInterno->chaves[i] > chave){
 
-                    if(flag == 0){
+                    if(control == 0){
                         aux_pont = noInterno->p[i + 1];
                         noInterno->p[i + 1] = -2;
-                        flag = 1;
+                        control = 1;
                     }
                     else{
-                        aux_pont_02 = noInterno->p[i + 1];
+                        aux_pont2 = noInterno->p[i + 1];
                         noInterno->p[i + 1] = aux_pont;
-                        aux_pont = aux_pont_02;
+                        aux_pont = aux_pont2;
                     }
                     aux_chave = noInterno->chaves[i];
                     noInterno->chaves[i] = chave;
                     chave = aux_chave;
-
                 }
             }
-            //AUMENTO DO NUMERO DE CHAVES NO NO INTERNO
-            noInterno->chaves[noInterno->m] = chave;
-            noInterno->m ++;
 
-            //ULTIMO ACERTO DO PONTEIRO PARA A TROCA
-            if(flag == 0){
+            //ATRIBUI A CHAVE NO FINAL DO NÓ INTERNO E INCREMENTA O VALOR DE M
+            noInterno->chaves[noInterno->m] = chave;
+            noInterno->m++;
+
+            //CASO VARIÁVEL DE CONTROLE SEJA IGUAL ESTADO INICIAL, COLOCA -2 PARA DEPOIS ATUALIZAR O PONTEIRO NO LOCAL
+            if(control == 0){
                 noInterno->p[noInterno->m] = -2;
             }
+            //CASO CONTRÁRIO, ATRIBUI PONTEIRO NO FINAL DO NÓ INTERNO
             else{
                 noInterno->p[noInterno->m] = aux_pont;
             }
 
-            int pont_novo;
+            //PEGA O ENDEREÇO DO PRÓXIMO NÓ FOLHA LIVRE, PARA SALVAR NOVO NÓ FOLHA
+            int pont_novo_no = metadados->pont_prox_no_folha_livre;
 
-            pont_novo = metadados->pont_prox_no_folha_livre;
-
+            //ATRIBUI ALGUNS ITENS AO NOVO NÓ FOLHA
             novoNo->pont_pai = noFolha->pont_pai;
             novoNo->pont_prox = noFolha->pont_prox;
-            noFolha->pont_prox = pont_novo;
+            noFolha->pont_prox = pont_novo_no;
 
-            //SALVAR ARQUIVO DE DADOS
+            //SALVA ARQUIVO DE DADOS (NO FOLHA)
             fseek(arq_dados, var_busca, SEEK_SET);
             salva_no_folha(d, noFolha, arq_dados);
 
-            fseek(arq_dados, pont_novo, SEEK_SET);
+            //SALVA ARQUIVO DE DADOS (NOVO NÓ FOLHA)
+            fseek(arq_dados, pont_novo_no, SEEK_SET);
             salva_no_folha(d, novoNo, arq_dados);
 
-            //FECHA ARQUIVO DE DADOS
-            //fclose(fd);
-
-            if(flag == 0){
-                noInterno->p[noInterno->m] = pont_novo;
+            //VERIFICA SE VARIÁVEL DE CONTROLE É IGUAL ESTADO INICIAL, SE FOR, ADICIONA NOVO PONTEIRO NO FINAL DO NÓ INTERNO
+            if(control == 0){
+                noInterno->p[noInterno->m] = pont_novo_no;
             }
+            //CASO CONTRÁRIO, SIGNIFICA QUE FOI ALTERADO ACIMA E EM ALGUM PONTEIRO O -2 ESTÁ PRESENTE
+            //PERCORRE NÓ INTERNO ATÉ ENCONTRAR O -2 E ENTÃO ALTERA O PONTEIRO DELE
             else{
                 for(int i = 0; i < noInterno->m; i++){
 
                     if(noInterno->p[i] == -2){
-                        noInterno->p[i] = pont_novo;
+                        noInterno->p[i] = pont_novo_no;
                         break;
                     }
                 }
