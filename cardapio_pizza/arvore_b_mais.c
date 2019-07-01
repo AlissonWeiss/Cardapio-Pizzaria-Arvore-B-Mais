@@ -1048,17 +1048,82 @@ int main(){
         }
         else if (opcao == 2){
 
+            int cod;
+            printf("Digite o codigo da pizza a ser removida: ");
+            scanf("%d", &cod);
+            int aux = exclui(cod, NOME_ARQUIVO_METADADOS, NOME_ARQUIVO_INDICE, NOME_ARQUIVO_DADOS, D);
+
+            if (aux != -1){
+                printf("Exclusao efetuada com sucesso!\n");
+            }
+            else{
+                printf("Nao foi possivel concluir a exclusao!\n");
+            }
+
         }
+
         else if (opcao == 3){
+
+            int cod;
+
+            printf("Digite o codigo da pizza a ser buscada: ");
+            scanf("%d", &cod);
+
+            int aux = busca(cod, NOME_ARQUIVO_METADADOS, NOME_ARQUIVO_INDICE, NOME_ARQUIVO_DADOS, D);
+
+            if (aux != -1){
+                printf("Pizza foi encontrada!\n");
+            }
+            else{
+                printf("Erro ao buscar pizza!\n");
+            }
 
         }
         else if (opcao == 4){
 
+            int cod;
+            char nome[50];
+            char categoria[20];
+            double preco;
+
+            printf("Digite o codigo da pizza a ser alterada: ");
+            scanf("%d", &cod);
+            printf("Digite o Novo Nome da pizza: ");
+            scanf("%s", &nome);
+            printf("Digite a Nova Categoria da pizza: ");
+            scanf("%s", &categoria);
+            printf("Digite o Novo Preco da pizza: ");
+            scanf("%lf", &preco);
+
+            int aux = altera_pizza(cod, nome, categoria, preco, NOME_ARQUIVO_METADADOS, NOME_ARQUIVO_INDICE, NOME_ARQUIVO_DADOS, D);
+
+            if (aux != -1){
+                printf("Pizza alterada com sucesso!\n");
+
+            }
+            else{
+                printf("Nao foi possivel alterar a pizza!\n");
+            }
         }
         else if (opcao == 5){
+            char categoria[20];
+            printf("Digite a categoria que deseja buscar: ");
+            scanf("%s", &categoria);
+            TPizza** lista = busca_por_categoria(D, NOME_ARQUIVO_DADOS, categoria);
 
+            int i = 0;
+            if (lista != NULL) {
+                while (lista[i] != NULL) {
+                    imprime_pizza(lista[i]);
+                    i++;
+                }
+            }
         }
         else if (opcao == 6){
+            char categoria[20];
+            printf("Digite a categoria que deseja remover: ");
+            scanf("%s", &categoria);
+            remove_por_categoria(D, NOME_ARQUIVO_METADADOS, NOME_ARQUIVO_INDICE, NOME_ARQUIVO_DADOS, categoria);
 
         }
         else if (opcao == 7){
